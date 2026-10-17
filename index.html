@@ -298,13 +298,40 @@
       margin: 1rem auto;
     }
 
+    /* Abbrechen-Button in der Kopfzeile */
+    .abort-btn {
+    background: #3b2026;
+    border: 1px solid #7a3b46;
+    color: #f6b8c4;
+    padding: 0.6rem 1.4rem;
+    border-radius: 40px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    transition: background 0.15s, color 0.15s;
+    width: auto;
+    }
+    .abort-btn:hover {
+    background: #5c2f3a;
+    color: #ffd7e0;
+    }
+    .abort-btn.hidden {
+    display: none !important;
+    }
+
     /* responsive */
     @media (max-width: 600px) {
       .stats-bar { gap: 1rem; padding: 0.7rem 1rem; }
       .stat-item { font-size: 1rem; }
       .stat-item i { font-size: 1.4rem; }
       body { padding: 0.8rem; }
+      .abort-btn { padding: 0.5rem 1rem; font-size: 0.9rem; }
     }
+
+    
   </style>
 </head>
 <body>
@@ -313,6 +340,11 @@
   <div class="stats-bar" id="statsBar">
     <div class="stat-item"><i class="bi bi-clock"></i> <span id="timerDisplay">0:00</span></div>
     <div class="stat-item"><i class="bi bi-lightning-charge"></i> <span id="movesDisplay">0</span></div>
+    <div class="stats-item">
+        <button class="abort-btn hidden" id="abortGameBtn" title="Spiel abbrechen">
+            <i class="bi bi-x-octagon"></i> Spiel abbrechen
+        </button>
+    </div>
   </div>
 
   <!-- Startansicht / Setup -->
@@ -390,9 +422,10 @@
   };
 
   const THEMES = {
+    hannabarbera: { label: "Hanna Barbera", custom: false, images: 39, format: 'jpg' },
     looneytunes: { label: "Looney Tunes", custom: false, images: 29, format: 'jpg' },
-    simpsons: { label: "Simpsons", custom: false, images: 29, format: 'jpg' },
     marvelheroes: { label: "Marvel Heroes", custom: false, images: 15, format: 'jpg' },
+    simpsons: { label: "Simpsons", custom: false, images: 29, format: 'jpg' },
     tokioparkplatz: { label: "Tokio Parkplatz", custom: false, images: 65, format: 'jpg' },
   };
 
@@ -423,6 +456,8 @@
 
   // IndexedDB-Verbindung
   let db = null;
+
+  const abortGameBtn = document.getElementById('abortGameBtn');
 
   // ==================== STORAGE-SCHICHT ====================
   async function initDB() {
@@ -728,6 +763,8 @@
     endGamePanel.classList.add('hidden');
     renderBoard(rows, cols);
     // Timer startet beim ersten Aufdecken
+
+    abortGameBtn.classList.remove('hidden');
   }
 
   function shuffleArray(arr) {
@@ -837,6 +874,8 @@
     endGameStats.textContent = `Zeit: ${formatTime(elapsed)} · Züge: ${moves}`;
     endGamePanel.classList.remove('hidden');
 
+    abortGameBtn.classList.add('hidden');
+
     // Highscore prüfen und ggf. speichern (ohne Namen)
     updateHighscoreIfNeeded(elapsed, moves, state.gameKey, state.themeKey);
 
@@ -882,6 +921,7 @@
     state.gameActive = false;
     if (state.timerInterval) clearInterval(state.timerInterval);
     state.startTime = null;
+    abortGameBtn.classList.add('hidden');
   });
 
   // ==================== THEMA ERSTELLEN ====================
@@ -1070,6 +1110,40 @@
   }
 
   init();
+
+  // ==================== SPIEL ABBRECHEN ====================
+function abortGame() {
+  if (!state.gameActive) return;
+//   if (!confirm('Spiel wirklich abbrechen? Das aktuelle Ergebnis wird nicht gespeichert.')) return;
+
+  if (state.timerInterval) {
+    clearInterval(state.timerInterval);
+    state.timerInterval = null;
+  }
+  state.startTime = null;
+  state.elapsed = 0;
+  state.gameActive = false;
+  state.inputLocked = false;
+  state.firstSelection = [];
+  state.moves = 0;
+  state.matchedSets = 0;
+
+  timerDisplay.textContent = '0:00';
+  movesDisplay.textContent = '0';
+  gameBoard.innerHTML = '';
+  abortGameBtn.classList.add('hidden');
+  endGamePanel.classList.add('hidden');
+  setupPanel.classList.remove('hidden');
+
+  gameSelect.value = state.gameKey;
+  if (themeSelect.querySelector(`option[value="${state.themeKey}"]`)) {
+    themeSelect.value = state.themeKey;
+  }
+  validateThemeAndGame();
+  updateHighscoreDisplay();
+}
+
+abortGameBtn.addEventListener('click', abortGame);
 </script>
 </body>
 </html>
