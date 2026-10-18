@@ -340,6 +340,94 @@
     }
 
     
+
+    /* UI-Designs: unabhängig von den Kartenmotiv-Themen */
+    :root {
+      --ui-bg:#0b0e14; --ui-text:#eef2f5; --ui-panel:#151b24;
+      --ui-bar:#1a1f2b; --ui-muted:#9aa8b9; --ui-border:#2d3748;
+      --ui-control:#1e2632; --ui-control-border:#334155;
+      --ui-accent:#5f9ea0; --ui-button:#2e4a5c; --ui-button-hover:#3f6074;
+      --ui-card:#212b36; --ui-card-back:#1a212c; --ui-card-border:#2d3f4e;
+      --ui-card-icon:#4e6b7c; --ui-shadow:0 10px 30px rgba(0,0,0,.6);
+      --ui-radius:2rem; --ui-card-radius:1.2rem;
+    }
+    body[data-ui-theme="neon"] {
+      --ui-bg:#08071b; --ui-text:#f5efff; --ui-panel:#17102e;
+      --ui-bar:#201039; --ui-muted:#c2a8e5; --ui-border:#7536be;
+      --ui-control:#21153f; --ui-control-border:#8b4fcb;
+      --ui-accent:#00f5d4; --ui-button:#7125b5; --ui-button-hover:#a136e0;
+      --ui-card:#21143f; --ui-card-back:#1c1038; --ui-card-border:#a143ef;
+      --ui-card-icon:#00f5d4; --ui-shadow:0 10px 34px rgba(151,46,255,.22);
+    }
+    body[data-ui-theme="retro"] {
+      --ui-bg:#292319; --ui-text:#fff0c6; --ui-panel:#403323;
+      --ui-bar:#55402a; --ui-muted:#e2c58d; --ui-border:#a77b40;
+      --ui-control:#493725; --ui-control-border:#b48a4b;
+      --ui-accent:#ffbf47; --ui-button:#ad592e; --ui-button-hover:#c7743c;
+      --ui-card:#59412a; --ui-card-back:#42301f; --ui-card-border:#e5ad55;
+      --ui-card-icon:#ffd16e; --ui-shadow:5px 6px 0 rgba(0,0,0,.35);
+      --ui-radius:.45rem; --ui-card-radius:.35rem;
+    }
+    body[data-ui-theme="retro"] * { font-family: 'Courier New', monospace; }
+    body[data-ui-theme="minimal"] {
+      --ui-bg:#f6f7f8; --ui-text:#20252b; --ui-panel:#ffffff;
+      --ui-bar:#ffffff; --ui-muted:#606c78; --ui-border:#dce1e6;
+      --ui-control:#f7f8fa; --ui-control-border:#cdd4dc;
+      --ui-accent:#2563eb; --ui-button:#253449; --ui-button-hover:#41556e;
+      --ui-card:#e9edf1; --ui-card-back:#e9edf1; --ui-card-border:#c5ced7;
+      --ui-card-icon:#64748b; --ui-shadow:0 4px 18px rgba(20,35,50,.07);
+      --ui-radius:.8rem; --ui-card-radius:.55rem;
+    }
+    body[data-ui-theme="glassmorphism"] {
+      --ui-bg:#17283f; --ui-text:#ffffff; --ui-panel:rgba(255,255,255,.12);
+      --ui-bar:rgba(255,255,255,.15); --ui-muted:#d5e3f4;
+      --ui-border:rgba(255,255,255,.3); --ui-control:rgba(255,255,255,.13);
+      --ui-control-border:rgba(255,255,255,.32); --ui-accent:#8ce9ff;
+      --ui-button:#396db5; --ui-button-hover:#548bd2;
+      --ui-card:rgba(255,255,255,.2); --ui-card-back:rgba(255,255,255,.13);
+      --ui-card-border:rgba(255,255,255,.35); --ui-card-icon:#c3f3ff;
+      --ui-shadow:0 12px 35px rgba(0,0,0,.18);
+    }
+    body:not([data-ui-theme="default"]) { background:var(--ui-bg); color:var(--ui-text); transition:background .25s,color .25s; }
+    body[data-ui-theme="glassmorphism"] {
+      background: radial-gradient(ellipse at 10% 10%,#7661b7 0%,transparent 45%),
+                  radial-gradient(ellipse at 90% 75%,#147e9e 0%,transparent 48%),#17283f;
+      background-attachment:fixed;
+    }
+    body:not([data-ui-theme="default"]) .stats-bar { background:var(--ui-bar); box-shadow:var(--ui-shadow); }
+    body:not([data-ui-theme="default"]) .stat-item { color:var(--ui-text); }
+    body:not([data-ui-theme="default"]) .stat-item i { color:var(--ui-accent); }
+    body:not([data-ui-theme="default"]) .setup-panel, body:not([data-ui-theme="default"]) .result-section, body:not([data-ui-theme="default"]) .modal-content, body:not([data-ui-theme="default"]) .end-game-panel {
+      background:var(--ui-panel); border:1px solid var(--ui-border);
+      border-radius:var(--ui-radius); box-shadow:var(--ui-shadow);
+    }
+    body:not([data-ui-theme="default"]) .field-group label { color:var(--ui-muted); }
+    body:not([data-ui-theme="default"]) select, body:not([data-ui-theme="default"]) input[type="text"], body:not([data-ui-theme="default"]) button {
+      background:var(--ui-control); border:1px solid var(--ui-control-border);
+      color:var(--ui-text);
+    }
+    body:not([data-ui-theme="default"]) select:focus, body:not([data-ui-theme="default"]) input:focus { border-color:var(--ui-accent); box-shadow:0 0 0 3px color-mix(in srgb,var(--ui-accent) 25%,transparent); }
+    body:not([data-ui-theme="default"]) button:not(.abort-btn):not(.delete-theme-btn):not(.close-btn) { background:var(--ui-button); color:#fff; }
+    body:not([data-ui-theme="default"]) button:not(.abort-btn):not(.delete-theme-btn):not(.close-btn):hover:not(:disabled) { background:var(--ui-button-hover); }
+    body:not([data-ui-theme="default"]) .card { background:var(--ui-card); border-radius:var(--ui-card-radius); box-shadow:var(--ui-shadow); }
+    body:not([data-ui-theme="default"]) .card .card-front, body:not([data-ui-theme="default"]) .card .card-back { border-radius:var(--ui-card-radius); }
+    body:not([data-ui-theme="default"]) .card .card-back { background:var(--ui-card-back); border-color:var(--ui-card-border); color:var(--ui-card-icon); }
+    body:not([data-ui-theme="default"]) .card .card-front { background:var(--ui-control); }
+    body:not([data-ui-theme="default"]) .card.matched { box-shadow:0 0 0 2px var(--ui-accent); }
+    body:not([data-ui-theme="default"]) .result-list { color:var(--ui-text); }
+    body:not([data-ui-theme="default"]) .result-list li { border-bottom-color:var(--ui-border); }
+    body:not([data-ui-theme="default"]) .highscore-box { background:var(--ui-control); }
+    body:not([data-ui-theme="default"]) .modal-content, body:not([data-ui-theme="default"]) .close-btn { border-color:var(--ui-border); }
+    body[data-ui-theme="glassmorphism"] .stats-bar,
+    body[data-ui-theme="glassmorphism"] .setup-panel,
+    body[data-ui-theme="glassmorphism"] .result-section,
+    body[data-ui-theme="glassmorphism"] .modal-content,
+    body[data-ui-theme="glassmorphism"] .end-game-panel,
+    body[data-ui-theme="glassmorphism"] .card .card-back { backdrop-filter:blur(18px); -webkit-backdrop-filter:blur(18px); }
+    body[data-ui-theme="neon"] .card:not(.matched) { box-shadow:0 0 14px rgba(161,67,239,.3); }
+    .ui-theme-control select { width:auto; max-width:100px; padding:.55rem .9rem; font-size:.9rem; }
+    @media(max-width:600px) { .ui-theme-control { width:100%; justify-content:center; } }
+
   </style>
 </head>
 <body>
@@ -348,6 +436,15 @@
   <div class="stats-bar" id="statsBar">
     <div class="stat-item"><i class="bi bi-clock"></i> <span id="timerDisplay">0:00</span></div>
     <div class="stat-item"><i class="bi bi-lightning-charge"></i> <span id="movesDisplay">0</span></div>
+    <div class="stat-item ui-theme-control">
+      <select id="uiThemeSelect" aria-label="Design auswählen">
+        <option value="default">Default</option>
+        <option value="neon">Neon</option>
+        <option value="retro">Retro</option>
+        <option value="minimal">Minimal</option>
+        <option value="glassmorphism">Glass</option>
+      </select>
+    </div>
     <div class="stats-item">
         <button class="abort-btn hidden" id="abortGameBtn" title="Spiel abbrechen">
             <i class="bi bi-x-octagon"></i> Spiel abbrechen
@@ -419,10 +516,25 @@
 </div>
 
 <script>
+  // Designwechsel: unabhängig von den Bildthemen und auch während des Spiels.
+  const UI_THEME_STORAGE_KEY = 'memory_ui_theme';
+  const uiThemeSelect = document.getElementById('uiThemeSelect');
+  const availableUiThemes = ['default','neon','retro','minimal','glassmorphism'];
+  function applyUiTheme(value) {
+    const theme = availableUiThemes.includes(value) ? value : 'default';
+    document.body.dataset.uiTheme = theme;
+    uiThemeSelect.value = theme;
+    try { localStorage.setItem(UI_THEME_STORAGE_KEY, theme); } catch (_) {}
+  }
+  uiThemeSelect.addEventListener('change', () => applyUiTheme(uiThemeSelect.value));
+  let savedUiTheme = 'default';
+  try { savedUiTheme = localStorage.getItem(UI_THEME_STORAGE_KEY) || 'default'; } catch (_) {}
+  applyUiTheme(savedUiTheme);
+
   // ==================== KONFIGURATION ====================
   const GAMES = {
-    easy:      { label: "6 Paare",      grid: [3, 4], selection: 2 },   // 12 Karten
-    medium:    { label: "10 Paare",     grid: [4, 5], selection: 2 },   // 20 Karten
+    easy:      { label: "6 Paare",      grid: [4, 3], selection: 2 },   // 12 Karten
+    medium:    { label: "10 Paare",     grid: [5, 4], selection: 2 },   // 20 Karten
     triplets4: { label: "4 Triplets",   grid: [3, 4], selection: 3 },   // 12 Karten
     quads4:    { label: "4 Quads",      grid: [4, 4], selection: 4 },   // 16 Karten
     triplet6:  { label: "6 Triplets",   grid: [3, 6], selection: 3 },   // 18 Karten
