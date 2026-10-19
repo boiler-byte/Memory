@@ -195,7 +195,6 @@ button:disabled {
   gap: 0.9rem;
   margin-top: 2rem;
   justify-content: center;
-  max-width: 800px;
   margin: 1rem auto;
 }
 .card {
@@ -768,13 +767,25 @@ try { savedUiTheme = localStorage.getItem(UI_THEME_STORAGE_KEY) || 'default'; } 
 applyUiTheme(savedUiTheme);
 
 // ==================== KONFIGURATION ====================
+// grid: [cols, rows] – erst Spalten, dann Zeilen
+// sm = Smartphone/Hochkant (schmale Breite, <= 600px)
+// lg = Desktop/breit (> 600px)
+// Maximal 8 Spalten und 8 Zeilen erlaubt.
+// Wichtig: cols*rows muss in sm und lg identisch sein, sonst passt die Set-Anzahl nicht.
 const GAMES = {
-  easy:      { label: "6 Paare",      grid: [4, 3], selection: 2 },   // 12 Karten
-  medium:    { label: "10 Paare",     grid: [5, 4], selection: 2 },   // 20 Karten
-  triplets4: { label: "4 Triplets",   grid: [3, 4], selection: 3 },   // 12 Karten
-  quads4:    { label: "4 Quads",      grid: [4, 4], selection: 4 },   // 16 Karten
-  triplet6:  { label: "6 Triplets",   grid: [3, 6], selection: 3 },   // 18 Karten
-  quad5:     { label: "5 Quads",      grid: [4, 5], selection: 4 },   // 20 Karten
+  easy:      { label: "6 Paare",     selection: 2, cards: 12, grid: { sm: [3, 4], lg: [4, 3] }, maxWidth: "800px" },
+  medium:    { label: "10 Paare",    selection: 2, cards: 20, grid: { sm: [4, 5], lg: [5, 4] } },
+  hard:    { label: "15 Paare",    selection: 2, cards: 30, grid: { sm: [5, 6], lg: [6, 5] } },
+  harder:    { label: "20 Paare",    selection: 2, cards: 40, grid: { sm: [5, 8], lg: [6, 7] }, maxWidth: "900px" },
+  triplets4: { label: "4 Triplets",  selection: 3, cards: 12, grid: { sm: [3, 4], lg: [4, 3] }, maxWidth: "800px" },
+  triplet6:  { label: "6 Triplets",  selection: 3, cards: 18, grid: { sm: [3, 6], lg: [6, 3] } },
+  triplet8:  { label: "8 Triplets",  selection: 3, cards: 24, grid: { sm: [4, 6], lg: [6, 4] } },
+  triplet10:  { label: "10 Triplets",  selection: 3, cards: 30, grid: { sm: [5, 6], lg: [6, 5] } },
+  triplet14:  { label: "14 Triplets",  selection: 3, cards: 42, grid: { sm: [6, 7], lg: [7, 6] } },
+  quads4:    { label: "4 Quads",     selection: 4, cards: 16, grid: { sm: [4, 4], lg: [4, 4] } },
+  quads5:     { label: "5 Quads",     selection: 4, cards: 20, grid: { sm: [4, 5], lg: [5, 4] } },
+  quads6:     { label: "6 Quads",     selection: 4, cards: 24, grid: { sm: [4, 6], lg: [6, 4] } },
+  quads9:     { label: "9 Quads",     selection: 4, cards: 36, grid: { sm: [6, 6], lg: [6, 6] } },
 };
 
 const THEMES = {
@@ -960,6 +971,28 @@ function populateThemeSelect() {
   renderThemePreview(); // NEU
 }
 
+// ==================== RESPONSIVE GRID ====================
+const SM_BREAKPOINT = 800; // px – entspricht der Media-Query
+
+function isSmallScreen() {
+  return window.innerWidth <= SM_BREAKPOINT;
+}
+
+// Liefert das aktive Grid als [cols, rows]
+// Sicherheitscheck: maximal 8x8
+function getActiveGrid(game) {
+  const g = isSmallScreen() ? game.grid.sm : game.grid.lg;
+  const cols = Math.min(g[0], 8);
+  const rows = Math.min(g[1], 8);
+  return [cols, rows];
+}
+
+// Anzahl Sets (Paare/Triplets/Quads) aus aktivem Grid berechnen
+function getActiveSetCount(game) {
+  const [cols, rows] = getActiveGrid(game);
+  return ( game.cards ?? (cols * rows) ) / game.selection;
+}
+
 // Prüfen, ob Thema genügend Bilder für das Spiel hat
 function validateThemeAndGame() {
   const game = GAMES[gameSelect.value];
@@ -971,7 +1004,7 @@ function validateThemeAndGame() {
   } else if (custom[themeKey]) {
     themeImages = custom[themeKey].images;
   }
-  const neededSets = (game.grid[0] * game.grid[1]) / game.selection;
+  const neededSets = getActiveSetCount(game); // responsive
   if (themeImages < neededSets) {
     startBtn.disabled = true;
     themeWarning.textContent = 'Thema hat zu wenig Bilder für das Spiel';
@@ -1117,8 +1150,7 @@ async function startGame() {
   const gameKey = gameSelect.value;
   const themeKey = themeSelect.value;
   const game = GAMES[gameKey];
-  const rows = game.grid[0];
-  const cols = game.grid[1];
+  const [cols, rows] = getActiveGrid(game);   // [cols, rows]
   const selection = game.selection;
 
   // Theme-Info besorgen
@@ -1128,7 +1160,7 @@ async function startGame() {
     themeInfo = THEMES[themeKey];
     const format = themeInfo.format;
     // Standard-Theme: Bilder liegen unter ./img/{themeKey}/1.{format}, ...
-    const numSets = (rows * cols) / selection;
+    const numSets = ( game.cards ?? (cols * rows) ) / selection;
     for (let i = 1; i <= numSets; i++) {
       imageDataArray.push(`./img/${themeKey}/${i}.${format}`);
     }
@@ -1139,7 +1171,7 @@ async function startGame() {
       alert('Thema nicht gefunden!');
       return;
     }
-    const numSets = (rows * cols) / selection;
+    const numSets = ( game.cards ?? (cols * rows) ) / selection;
     const stored = await getThemeImages(themeKey); // [{name, data}]
     if (!stored || stored.length < numSets) {
       alert('Nicht genügend Bilder im Custom-Thema gespeichert.');
@@ -1150,7 +1182,7 @@ async function startGame() {
   }
 
   // Karten erstellen: Jedes Set kommt selection-mal vor
-  const totalCards = rows * cols;
+  const totalCards = game.cards ?? ( cols * rows );
   const numSets = totalCards / selection;
   let cards = [];
   for (let setIdx = 0; setIdx < numSets; setIdx++) {
@@ -1187,7 +1219,7 @@ async function startGame() {
   // UI umschalten
   setupPanel.classList.add('hidden');
   endGamePanel.classList.add('hidden');
-  renderBoard(rows, cols);
+  renderBoard(rows, cols, game.maxWidth ?? null);
   // Timer startet beim ersten Aufdecken
 
   abortGameBtn.classList.remove('hidden');
@@ -1200,10 +1232,11 @@ function shuffleArray(arr) {
   }
 }
 
-function renderBoard(rows, cols) {
+function renderBoard(rows, cols, maxWidth) {
   gameBoard.style.gridTemplateColumns = `repeat(${cols}, 1fr)`;
   gameBoard.style.gridTemplateRows = `repeat(${rows}, 1fr)`;
   gameBoard.innerHTML = '';
+  gameBoard.style.maxWidth = maxWidth;
 
   state.cards.forEach((card, idx) => {
     const cardEl = document.createElement('div');
@@ -1538,6 +1571,31 @@ async function init() {
   state.gameKey = gameSelect.value;
   state.themeKey = themeSelect.value;
   renderThemePreview();
+
+  // Sanity-Check: 8x8-Limit und gleiche Kartenzahl in sm/lg
+  Object.entries(GAMES).forEach(([key, g]) => {
+    const [sc, sr] = g.grid.sm;
+    const [lc, lr] = g.grid.lg;
+    if (sc > 8 || sr > 8 || lc > 8 || lr > 8) {
+      console.warn(`GAMES.${key}: Grid überschreitet 8×8 (sm=${sc}×${sr}, lg=${lc}×${lr})`);
+    }
+    if (sc * sr !== lc * lr) {
+      console.warn(`GAMES.${key}: Kartenanzahl sm (${sc * sr}) ≠ lg (${lc * lr})`);
+    }
+    if ((sc * sr) % g.selection !== 0) {
+      console.warn(`GAMES.${key}: Kartenanzahl sm nicht durch selection (${g.selection}) teilbar`);
+    }
+    if ((lc * lr) % g.selection !== 0) {
+      console.warn(`GAMES.${key}: Kartenanzahl lg nicht durch selection (${g.selection}) teilbar`);
+    }
+  });
+
+  // Bei Größenänderung (nur im Setup) Validierung aktualisieren
+  window.addEventListener('resize', () => {
+    if (!setupPanel.classList.contains('hidden')) {
+      validateThemeAndGame();
+    }
+  });
 }
 
 init();
@@ -1575,6 +1633,16 @@ function abortGame() {
 }
 
 abortGameBtn.addEventListener('click', abortGame);
+
+// Einfacher Resize-Handler: setzt nur das Grid-Template am #gameBoard neu
+window.addEventListener('resize', () => {
+  if (!state.gameActive) return;
+  const game = GAMES[state.gameKey];
+  if (!game) return;
+  const [cols, rows] = getActiveGrid(game);
+  gameBoard.style.gridTemplateColumns = `repeat(${cols}, 1fr)`;
+  gameBoard.style.gridTemplateRows = `repeat(${rows}, 1fr)`;
+});
 </script>
 </body>
 </html>
