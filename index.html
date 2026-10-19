@@ -1,434 +1,653 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
-  <link rel="manifest" href="manifest.json">
-  <meta name="theme-color" content="#000000">
-  <!-- iOS-Spezifika (Safari) -->
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="apple-mobile-web-app-title" content="Memory">
-  <link rel="apple-touch-icon" href="icons/icon-192.png">
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#000000">
+<!-- iOS-Spezifika (Safari) -->
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Memory">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
 
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Memory – dynamische Themes</title>
-  <!-- Bootstrap Icons (CDN) -->
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-  <style>
-    /* ---------- DUNKLES DESIGN ---------- */
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-      font-family: system-ui, 'Segoe UI', Roboto, sans-serif;
-    }
-    body {
-      background: #0b0e14;
-      color: #eef2f5;
-      min-height: 100vh;
-      display: flex;
-      justify-content: center;
-      padding: 1.5rem;
-    }
-    .app {
-      max-width: 1200px;
-      width: 100%;
-    }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Memory – dynamische Themes</title>
+<!-- Bootstrap Icons (CDN) -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+<style>
 
-    /* Kopfzeile / Metriken */
-    .stats-bar {
-      display: flex;
-      gap: 2rem;
-      background: #1a1f2b;
-      padding: 0.9rem 1.8rem;
-      border-radius: 60px;
-      margin-bottom: 1.5rem;
-      box-shadow: 0 8px 20px rgba(0,0,0,0.6);
-      justify-content: center;
-      flex-wrap: wrap;
-    }
-    .stat-item {
-      display: flex;
-      align-items: center;
-      gap: 0.6rem;
-      font-size: 1.3rem;
-      font-weight: 600;
-      color: #cddbe7;
-    }
-    .stat-item i {
-      font-size: 1.8rem;
-      color: #5f9ea0;
-    }
+@font-face {
+  font-family: 'NeonLight';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url(fonts/NeonNight-LVZxg.otf) format('opentype');
+}
+@font-face {
+  font-family: 'RetroFancy';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url(fonts/RetroFancy-drvmX.otf) format('opentype');
+}
+@font-face {
+  font-family: 'Valeska';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url(fonts/Valeska-V44Pl.otf) format('opentype');
+}
+@font-face {
+  font-family: 'Noble';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url(fonts/NobleElegantRegular-ov6vo.ttf) format('opentype');
+}
 
-    /* Steuerung / Startansicht */
-    .setup-panel {
-      background: #151b24;
-      border-radius: 2rem;
-      padding: 2rem 2rem 1.8rem;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.7);
-      border: 1px solid #2d3748;
-    }
-    .row {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 1.5rem;
-      align-items: flex-end;
-    }
-    .field-group {
-      flex: 1 1 220px;
-      min-width: 180px;
-    }
-    .field-group label {
-      display: block;
-      font-size: 0.8rem;
-      text-transform: uppercase;
-      letter-spacing: 1px;
-      color: #9aa8b9;
-      margin-bottom: 0.4rem;
-    }
-    select, input[type="text"], button {
-      background: #1e2632;
-      border: 1px solid #334155;
-      color: #f0f4fa;
-      padding: 0.75rem 1.2rem;
-      border-radius: 40px;
-      font-size: 1rem;
-      width: 100%;
-      outline: none;
-      transition: 0.2s;
-    }
-    select:focus, input:focus {
-      border-color: #5f9ea0;
-      box-shadow: 0 0 0 3px rgba(95,158,160,0.2);
-    }
-    button {
-      background: #2e4a5c;
-      border: none;
-      font-weight: 600;
-      cursor: pointer;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      gap: 0.5rem;
-      width: auto;
-      padding: 0.75rem 1.8rem;
-      transition: background 0.15s, opacity 0.15s;
-    }
-    button:hover:not(:disabled) {
-      background: #3f6074;
-    }
-    button:disabled {
-      opacity: 0.4;
-      cursor: not-allowed;
-    }
-    .button-row {
-      display: flex;
-      gap: 1rem;
-      flex-wrap: wrap;
-      margin-top: 1rem;
-    }
-    .hint-error {
-      color: #f87171;
-      font-size: 0.85rem;
-      margin-top: 0.5rem;
-      min-height: 1.3rem;
-    }
 
-    /* Custom-Theme-Liste mit Löschbutton */
-    .theme-select-wrapper {
-      display: flex;
-      gap: 0.5rem;
-      align-items: center;
-    }
-    .theme-select-wrapper select {
-      flex: 1;
-    }
-    .delete-theme-btn {
-      background: #3b2e3a;
-      border: 1px solid #6b4a5a;
-      color: #e0b7c9;
-      padding: 0.7rem 1rem;
-      border-radius: 40px;
-      font-size: 1.2rem;
-      width: auto;
-      line-height: 1;
-    }
-    .delete-theme-btn:hover {
-      background: #553b4b;
-      color: #ffc0d0;
-    }
+/* ---------- DUNKLES DESIGN ---------- */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: system-ui, 'Segoe UI', Roboto, sans-serif;
+}
+body {
+  background: #0b0e14;
+  color: #eef2f5;
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  padding: 1.5rem;
+}
+.app {
+  max-width: 1200px;
+  width: 100%;
+}
 
-    /* Kartenraster */
-    .board {
-      display: grid;
-      gap: 0.9rem;
-      margin-top: 2rem;
-      justify-content: center;
-    }
-    .card {
-      aspect-ratio: 1 / 1;
-      background: #212b36;
-      border-radius: 1.2rem;
-      box-shadow: 0 6px 0 #0d1219, 0 8px 20px rgba(0,0,0,0.6);
-      cursor: pointer;
-      transform-style: preserve-3d;
-      transition: transform 0.3s ease, opacity 0.3s, filter 0.2s;
-      position: relative;
-      user-select: none;
-    }
-    .card.flipped {
-      transform: rotateY(180deg);
-    }
-    .card.matched {
-      pointer-events: none;
-      box-shadow: 0 0 0 2px #5f9ea0;
-      transition: transform 0.6s ease, opacity 0.6s, filter 0.4s;
-    }
-    .card.matched .card-front {
-        filter: grayscale(1);
-        opacity: 0.5;
-    }
-    .card .card-front, .card .card-back {
-      position: absolute;
-      inset: 0;
-      backface-visibility: hidden;
-      border-radius: 1.2rem;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      overflow: hidden;
-    }
-    .card .card-back {
-      background: #1a212c;
-      border: 2px solid #2d3f4e;
-      font-size: 2.4rem;
-      color: #4e6b7c;
-      transform: rotateY(0deg);
-    }
-    .card .card-front {
-      background: #1e2632;
-      transform: rotateY(180deg);
-      padding: 0.3rem;
-    }
-    .card .card-front img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      border-radius: 1rem;
-      display: block;
-    }
+/* Kopfzeile / Metriken */
+.stats-bar {
+  display: flex;
+  gap: 2rem;
+  background: #1a1f2b;
+  padding: 0.9rem 1.8rem;
+  border-radius: 60px;
+  margin-bottom: 1.5rem;
+  box-shadow: 0 8px 20px rgba(0,0,0,0.6);
+  justify-content: center;
+  flex-wrap: wrap;
+}
+.stat-item {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  font-size: 1.3rem;
+  font-weight: 600;
+  color: #cddbe7;
+}
+.stat-item i {
+  font-size: 1.8rem;
+  color: #5f9ea0;
+}
 
-    /* Ergebnisliste & Modal */
-    .result-section {
-      background: #151b24;
-      border-radius: 2rem;
-      padding: 1.5rem 2rem;
-      margin-top: 2rem;
-      border: 1px solid #2d3748;
-    }
-    .result-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 1rem;
-    }
-    .result-list {
-      list-style: none;
-      max-height: 280px;
-      overflow-y: auto;
-      font-size: 0.9rem;
-      color: #cbd5e1;
-    }
-    .result-list li {
-      display: flex;
-      justify-content: space-between;
-      padding: 0.5rem 0.2rem;
-      border-bottom: 1px solid #26303b;
-    }
-    .highscore-box {
-      background: #1e2a36;
-      border-radius: 1rem;
-      padding: 0.8rem 1.2rem;
-      font-weight: 500;
-    }
-    .modal-overlay {
-      position: fixed;
-      inset: 0;
-      background: rgba(0,0,0,0.8);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      z-index: 1000;
-      padding: 1rem;
-    }
-    .modal-content {
-      background: #151f2b;
-      border-radius: 2rem;
-      padding: 2rem;
-      max-width: 500px;
-      width: 100%;
-      border: 1px solid #3a4d5e;
-      box-shadow: 0 25px 40px black;
-    }
-    .modal-content h3 {
-      margin-bottom: 1rem;
-      font-weight: 600;
-    }
-    .modal-content .field-group {
-      margin-bottom: 1.2rem;
-    }
-    .modal-actions {
-      display: flex;
-      gap: 1rem;
-      justify-content: flex-end;
-    }
-    .close-btn {
-      background: transparent;
-      border: 1px solid #3a4d5e;
-    }
-    .upload-errors {
-      color: #f87171;
-      font-size: 0.8rem;
-      margin-top: 0.6rem;
-    }
-    .hidden {
-      display: none !important;
-    }
-    .end-game-panel {
-      text-align: center;
-      background: #151f2b;
-      border-radius: 2rem;
-      padding: 2rem;
-      margin-top: 1.5rem;
-    }
-    .end-game-panel input {
-      max-width: 250px;
-      margin: 1rem auto;
-    }
+/* Steuerung / Startansicht */
+.setup-panel {
+  background: #151b24;
+  border-radius: 2rem;
+  padding: 2rem 2rem 1.8rem;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.7);
+  border: 1px solid #2d3748;
+}
+.row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.5rem;
+  align-items: flex-end;
+}
+.field-group {
+  flex: 1 1 220px;
+  min-width: 180px;
+}
+.field-group label {
+  display: block;
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: #9aa8b9;
+  margin-bottom: 0.4rem;
+}
+select, input[type="text"], button {
+  background: #1e2632;
+  border: 1px solid #334155;
+  color: #f0f4fa;
+  padding: 0.75rem 1.2rem;
+  border-radius: 40px;
+  font-size: 1rem;
+  width: 100%;
+  outline: none;
+  transition: 0.2s;
+}
+select:focus, input:focus {
+  border-color: #5f9ea0;
+  box-shadow: 0 0 0 3px rgba(95,158,160,0.2);
+}
+button {
+  background: #2e4a5c;
+  border: none;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  width: auto;
+  padding: 0.75rem 1.8rem;
+  transition: background 0.15s, opacity 0.15s;
+}
+button:hover:not(:disabled) {
+  background: #3f6074;
+}
+button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+.button-row {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin-top: 1rem;
+}
+.hint-error {
+  color: #f87171;
+  font-size: 0.85rem;
+  margin-top: 0.5rem;
+  min-height: 1.3rem;
+}
 
-    /* Abbrechen-Button in der Kopfzeile */
-    .abort-btn {
-    background: #3b2026;
-    border: 1px solid #7a3b46;
-    color: #f6b8c4;
-    padding: 0.6rem 1.4rem;
-    border-radius: 40px;
-    font-size: 1rem;
-    font-weight: 600;
-    cursor: pointer;
-    display: inline-flex;
-    align-items: center;
-    gap: 0.5rem;
-    transition: background 0.15s, color 0.15s;
-    width: auto;
-    }
-    .abort-btn:hover {
-    background: #5c2f3a;
-    color: #ffd7e0;
-    }
-    .abort-btn.hidden {
-    display: none !important;
-    }
+/* Custom-Theme-Liste mit Löschbutton */
+.theme-select-wrapper {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+.theme-select-wrapper select {
+  flex: 1;
+}
+.delete-theme-btn {
+  background: #3b2e3a;
+  border: 1px solid #6b4a5a;
+  color: #e0b7c9;
+  padding: 0.7rem 1rem;
+  border-radius: 40px;
+  font-size: 1.2rem;
+  width: auto;
+  line-height: 1;
+}
+.delete-theme-btn:hover {
+  background: #553b4b;
+  color: #ffc0d0;
+}
 
-    /* responsive */
-    @media (max-width: 600px) {
-      .stats-bar { gap: 1rem; padding: 0.7rem 1rem; }
-      .stat-item { font-size: 1rem; }
-      .stat-item i { font-size: 1.4rem; }
-      body { padding: 0.8rem; }
-      .abort-btn { padding: 0.5rem 1rem; font-size: 0.9rem; }
-    }
+/* Kartenraster */
+.board {
+  display: grid;
+  gap: 0.9rem;
+  margin-top: 2rem;
+  justify-content: center;
+  max-width: 800px;
+  margin: 1rem auto;
+}
+.card {
+  aspect-ratio: 1 / 1;
+  background: #212b36;
+  border-radius: 1.2rem;
+  box-shadow: 0 6px 0 #0d1219, 0 8px 20px rgba(0,0,0,0.6);
+  cursor: pointer;
+  transform-style: preserve-3d;
+  transition: transform 0.3s ease, opacity 0.3s, filter 0.2s;
+  position: relative;
+  user-select: none;
+}
+.card.flipped {
+  transform: rotateY(180deg);
+}
+.card.matched {
+  pointer-events: none;
+  box-shadow: 0 0 0 2px #5f9ea0;
+  transition: transform 0.6s ease, opacity 0.6s, filter 0.4s;
+}
+.card.matched .card-front {
+    filter: grayscale(1);
+    opacity: 0.5;
+}
+.card .card-front, .card .card-back {
+  position: absolute;
+  inset: 0;
+  backface-visibility: hidden;
+  border-radius: 1.2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+.card .card-back {
+  background: #1a212c;
+  border: 2px solid #2d3f4e;
+  font-size: 2.4rem;
+  color: #4e6b7c;
+  transform: rotateY(0deg);
+}
+.card .card-front {
+  background: #1e2632;
+  transform: rotateY(180deg);
+  padding: 0.3rem;
+}
+.card .card-front img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 1rem;
+  display: block;
+}
 
-    
+/* Ergebnisliste & Modal */
+.result-section {
+  background: #151b24;
+  border-radius: 2rem;
+  padding: 1.5rem 2rem;
+  margin-top: 2rem;
+  border: 1px solid #2d3748;
+}
+.result-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+.result-list {
+  list-style: none;
+  max-height: 280px;
+  overflow-y: auto;
+  font-size: 0.9rem;
+  color: #cbd5e1;
+}
+.result-list li {
+  display: flex;
+  justify-content: space-between;
+  padding: 0.5rem 0.2rem;
+  border-bottom: 1px solid #26303b;
+}
+.highscore-box {
+  background: #1e2a36;
+  border-radius: 1rem;
+  padding: 0.8rem 1.2rem;
+  font-weight: 500;
+}
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 1rem;
+}
+.modal-content {
+  background: #151f2b;
+  border-radius: 2rem;
+  padding: 2rem;
+  max-width: 500px;
+  width: 100%;
+  border: 1px solid #3a4d5e;
+  box-shadow: 0 25px 40px black;
+}
+.modal-content h3 {
+  margin-bottom: 1rem;
+  font-weight: 600;
+}
+.modal-content .field-group {
+  margin-bottom: 1.2rem;
+}
+.modal-actions {
+  display: flex;
+  gap: 1rem;
+  justify-content: flex-end;
+}
+.close-btn {
+  background: transparent;
+  border: 1px solid #3a4d5e;
+}
+.upload-errors {
+  color: #f87171;
+  font-size: 0.8rem;
+  margin-top: 0.6rem;
+}
+.hidden {
+  display: none !important;
+}
+.end-game-panel {
+  text-align: center;
+  background: #151f2b;
+  border-radius: 2rem;
+  padding: 2rem;
+  margin-top: 1.5rem;
+}
+.end-game-panel input {
+  max-width: 250px;
+  margin: 1rem auto;
+}
 
-    /* UI-Designs: unabhängig von den Kartenmotiv-Themen */
-    :root {
-      --ui-bg:#0b0e14; --ui-text:#eef2f5; --ui-panel:#151b24;
-      --ui-bar:#1a1f2b; --ui-muted:#9aa8b9; --ui-border:#2d3748;
-      --ui-control:#1e2632; --ui-control-border:#334155;
-      --ui-accent:#5f9ea0; --ui-button:#2e4a5c; --ui-button-hover:#3f6074;
-      --ui-card:#212b36; --ui-card-back:#1a212c; --ui-card-border:#2d3f4e;
-      --ui-card-icon:#4e6b7c; --ui-shadow:0 10px 30px rgba(0,0,0,.6);
-      --ui-radius:2rem; --ui-card-radius:1.2rem;
-    }
-    body[data-ui-theme="neon"] {
-      --ui-bg:#08071b; --ui-text:#f5efff; --ui-panel:#17102e;
-      --ui-bar:#201039; --ui-muted:#c2a8e5; --ui-border:#7536be;
-      --ui-control:#21153f; --ui-control-border:#8b4fcb;
-      --ui-accent:#00f5d4; --ui-button:#7125b5; --ui-button-hover:#a136e0;
-      --ui-card:#21143f; --ui-card-back:#1c1038; --ui-card-border:#a143ef;
-      --ui-card-icon:#00f5d4; --ui-shadow:0 10px 34px rgba(151,46,255,.22);
-    }
-    body[data-ui-theme="retro"] {
-      --ui-bg:#292319; --ui-text:#fff0c6; --ui-panel:#403323;
-      --ui-bar:#55402a; --ui-muted:#e2c58d; --ui-border:#a77b40;
-      --ui-control:#493725; --ui-control-border:#b48a4b;
-      --ui-accent:#ffbf47; --ui-button:#ad592e; --ui-button-hover:#c7743c;
-      --ui-card:#59412a; --ui-card-back:#42301f; --ui-card-border:#e5ad55;
-      --ui-card-icon:#ffd16e; --ui-shadow:5px 6px 0 rgba(0,0,0,.35);
-      --ui-radius:.45rem; --ui-card-radius:.35rem;
-    }
-    body[data-ui-theme="retro"] * { font-family: 'Courier New', monospace; }
-    body[data-ui-theme="minimal"] {
-      --ui-bg:#f6f7f8; --ui-text:#20252b; --ui-panel:#ffffff;
-      --ui-bar:#ffffff; --ui-muted:#606c78; --ui-border:#dce1e6;
-      --ui-control:#f7f8fa; --ui-control-border:#cdd4dc;
-      --ui-accent:#2563eb; --ui-button:#253449; --ui-button-hover:#41556e;
-      --ui-card:#e9edf1; --ui-card-back:#e9edf1; --ui-card-border:#c5ced7;
-      --ui-card-icon:#64748b; --ui-shadow:0 4px 18px rgba(20,35,50,.07);
-      --ui-radius:.8rem; --ui-card-radius:.55rem;
-    }
-    body[data-ui-theme="glassmorphism"] {
-      --ui-bg:#17283f; --ui-text:#ffffff; --ui-panel:rgba(255,255,255,.12);
-      --ui-bar:rgba(255,255,255,.15); --ui-muted:#d5e3f4;
-      --ui-border:rgba(255,255,255,.3); --ui-control:rgba(255,255,255,.13);
-      --ui-control-border:rgba(255,255,255,.32); --ui-accent:#8ce9ff;
-      --ui-button:#396db5; --ui-button-hover:#548bd2;
-      --ui-card:rgba(255,255,255,.2); --ui-card-back:rgba(255,255,255,.13);
-      --ui-card-border:rgba(255,255,255,.35); --ui-card-icon:#c3f3ff;
-      --ui-shadow:0 12px 35px rgba(0,0,0,.18);
-    }
-    body:not([data-ui-theme="default"]) { background:var(--ui-bg); color:var(--ui-text); transition:background .25s,color .25s; }
-    body[data-ui-theme="glassmorphism"] {
-      background: radial-gradient(ellipse at 10% 10%,#7661b7 0%,transparent 45%),
-                  radial-gradient(ellipse at 90% 75%,#147e9e 0%,transparent 48%),#17283f;
-      background-attachment:fixed;
-    }
-    body:not([data-ui-theme="default"]) .stats-bar { background:var(--ui-bar); box-shadow:var(--ui-shadow); }
-    body:not([data-ui-theme="default"]) .stat-item { color:var(--ui-text); }
-    body:not([data-ui-theme="default"]) .stat-item i { color:var(--ui-accent); }
-    body:not([data-ui-theme="default"]) .setup-panel, body:not([data-ui-theme="default"]) .result-section, body:not([data-ui-theme="default"]) .modal-content, body:not([data-ui-theme="default"]) .end-game-panel {
-      background:var(--ui-panel); border:1px solid var(--ui-border);
-      border-radius:var(--ui-radius); box-shadow:var(--ui-shadow);
-    }
-    body:not([data-ui-theme="default"]) .field-group label { color:var(--ui-muted); }
-    body:not([data-ui-theme="default"]) select, body:not([data-ui-theme="default"]) input[type="text"], body:not([data-ui-theme="default"]) button {
-      background:var(--ui-control); border:1px solid var(--ui-control-border);
-      color:var(--ui-text);
-    }
-    body:not([data-ui-theme="default"]) select:focus, body:not([data-ui-theme="default"]) input:focus { border-color:var(--ui-accent); box-shadow:0 0 0 3px color-mix(in srgb,var(--ui-accent) 25%,transparent); }
-    body:not([data-ui-theme="default"]) button:not(.abort-btn):not(.delete-theme-btn):not(.close-btn) { background:var(--ui-button); color:#fff; }
-    body:not([data-ui-theme="default"]) button:not(.abort-btn):not(.delete-theme-btn):not(.close-btn):hover:not(:disabled) { background:var(--ui-button-hover); }
-    body:not([data-ui-theme="default"]) .card { background:var(--ui-card); border-radius:var(--ui-card-radius); box-shadow:var(--ui-shadow); }
-    body:not([data-ui-theme="default"]) .card .card-front, body:not([data-ui-theme="default"]) .card .card-back { border-radius:var(--ui-card-radius); }
-    body:not([data-ui-theme="default"]) .card .card-back { background:var(--ui-card-back); border-color:var(--ui-card-border); color:var(--ui-card-icon); }
-    body:not([data-ui-theme="default"]) .card .card-front { background:var(--ui-control); }
-    body:not([data-ui-theme="default"]) .card.matched { box-shadow:0 0 0 2px var(--ui-accent); }
-    body:not([data-ui-theme="default"]) .result-list { color:var(--ui-text); }
-    body:not([data-ui-theme="default"]) .result-list li { border-bottom-color:var(--ui-border); }
-    body:not([data-ui-theme="default"]) .highscore-box { background:var(--ui-control); }
-    body:not([data-ui-theme="default"]) .modal-content, body:not([data-ui-theme="default"]) .close-btn { border-color:var(--ui-border); }
-    body[data-ui-theme="glassmorphism"] .stats-bar,
-    body[data-ui-theme="glassmorphism"] .setup-panel,
-    body[data-ui-theme="glassmorphism"] .result-section,
-    body[data-ui-theme="glassmorphism"] .modal-content,
-    body[data-ui-theme="glassmorphism"] .end-game-panel,
-    body[data-ui-theme="glassmorphism"] .card .card-back { backdrop-filter:blur(18px); -webkit-backdrop-filter:blur(18px); }
-    body[data-ui-theme="neon"] .card:not(.matched) { box-shadow:0 0 14px rgba(161,67,239,.3); }
-    .ui-theme-control select { width:auto; max-width:100px; padding:.55rem .9rem; font-size:.9rem; }
-    @media(max-width:600px) { .ui-theme-control { width:100%; justify-content:center; } }
+/* Abbrechen-Button in der Kopfzeile */
+.abort-btn {
+background: #3b2026;
+border: 1px solid #7a3b46;
+color: #f6b8c4;
+padding: 0.6rem 1.4rem;
+border-radius: 40px;
+font-size: 1rem;
+font-weight: 600;
+cursor: pointer;
+display: inline-flex;
+align-items: center;
+gap: 0.5rem;
+transition: background 0.15s, color 0.15s;
+width: auto;
+}
+.abort-btn:hover {
+background: #5c2f3a;
+color: #ffd7e0;
+}
+.abort-btn.hidden {
+display: none !important;
+}
 
-  </style>
+/* ---------- NEU: Bildervorschau ---------- */
+.theme-preview {
+  margin-top: 1.2rem;
+  padding: 1rem;
+  background: #10151d;
+  border: 1px solid #2d3748;
+  border-radius: 1.2rem;
+}
+.theme-preview-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: #9aa8b9;
+  margin-bottom: 0.7rem;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+.theme-preview-title .preview-count {
+  font-size: 0.7rem;
+  color: #64748b;
+  text-transform: none;
+  letter-spacing: 0;
+}
+.theme-preview-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(64px, 1fr));
+  gap: 0.5rem;
+}
+.theme-preview-item {
+  aspect-ratio: 1 / 1;
+  border-radius: 0.6rem;
+  overflow: hidden;
+  background: #1e2632;
+  border: 1px solid #2d3748;
+  position: relative;
+}
+.theme-preview-item img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+.theme-preview-more {
+  aspect-ratio: 1 / 1;
+  border-radius: 0.6rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #1e2632;
+  border: 1px dashed #3a4d5e;
+  color: #9aa8b9;
+  font-weight: 600;
+  font-size: 0.95rem;
+}
+.theme-preview-empty {
+  color: #64748b;
+  font-size: 0.85rem;
+  font-style: italic;
+  padding: 0.3rem 0;
+}
+
+
+
+
+/* UI-Designs: unabhängig von den Kartenmotiv-Themen */
+:root {
+  --ui-bg:#0b0e14; --ui-text:#eef2f5; --ui-panel:#151b24;
+  --ui-bar:#1a1f2b; --ui-muted:#9aa8b9; --ui-border:#2d3748;
+  --ui-control:#1e2632; --ui-control-border:#334155;
+  --ui-accent:#5f9ea0; --ui-button:#2e4a5c; --ui-button-hover:#3f6074;
+  --ui-card:#212b36; --ui-card-back:#1a212c; --ui-card-border:#2d3f4e;
+  --ui-card-icon:#4e6b7c; --ui-shadow:0 10px 30px rgba(0,0,0,.6);
+  --ui-radius:2rem; --ui-card-radius:1.2rem;
+}
+body[data-ui-theme="neon"] {
+  --ui-bg:#08071b; --ui-text:#f5efff; --ui-panel:#17102e;
+  --ui-bar:#201039; --ui-muted:#c2a8e5; --ui-border:#7536be;
+  --ui-control:#21153f; --ui-control-border:#8b4fcb;
+  --ui-accent:#00f5d4; --ui-button:#7125b5; --ui-button-hover:#a136e0;
+  --ui-card:#21143f; --ui-card-back:#1c1038; --ui-card-border:#a143ef;
+  --ui-card-icon:#00f5d4; --ui-shadow:0 10px 34px rgba(151,46,255,.22);
+}
+body[data-ui-theme="retro"] {
+  --ui-bg:#292319; --ui-text:#fff0c6; --ui-panel:#403323;
+  --ui-bar:#55402a; --ui-muted:#e2c58d; --ui-border:#a77b40;
+  --ui-control:#493725; --ui-control-border:#b48a4b;
+  --ui-accent:#ffbf47; --ui-button:#ad592e; --ui-button-hover:#c7743c;
+  --ui-card:#59412a; --ui-card-back:#42301f; --ui-card-border:#e5ad55;
+  --ui-card-icon:#ffd16e; --ui-shadow:5px 6px 0 rgba(0,0,0,.35);
+  --ui-radius:.45rem; --ui-card-radius:.35rem;
+}
+body[data-ui-theme="retro"] * { font-family: 'Courier New', monospace; }
+body[data-ui-theme="minimal"] {
+  --ui-bg:#f6f7f8; --ui-text:#20252b; --ui-panel:#ffffff;
+  --ui-bar:#ffffff; --ui-muted:#606c78; --ui-border:#dce1e6;
+  --ui-control:#f7f8fa; --ui-control-border:#cdd4dc;
+  --ui-accent:#2563eb; --ui-button:#253449; --ui-button-hover:#41556e;
+  --ui-card:#e9edf1; --ui-card-back:#e9edf1; --ui-card-border:#c5ced7;
+  --ui-card-icon:#64748b; --ui-shadow:0 4px 18px rgba(20,35,50,.07);
+  --ui-radius:.8rem; --ui-card-radius:.55rem;
+}
+body[data-ui-theme="glassmorphism"] {
+  --ui-bg:#17283f; --ui-text:#ffffff; --ui-panel:rgba(255,255,255,.12);
+  --ui-bar:rgba(255,255,255,.15); --ui-muted:#d5e3f4;
+  --ui-border:rgba(255,255,255,.3); --ui-control:rgba(255,255,255,.13);
+  --ui-control-border:rgba(255,255,255,.32); --ui-accent:#8ce9ff;
+  --ui-button:#396db5; --ui-button-hover:#548bd2;
+  --ui-card:rgba(255,255,255,.2); --ui-card-back:rgba(255,255,255,.13);
+  --ui-card-border:rgba(255,255,255,.35); --ui-card-icon:#c3f3ff;
+  --ui-shadow:0 12px 35px rgba(0,0,0,.18);
+}
+
+
+/* Vorschau an UI-Theme anpassen */
+body:not([data-ui-theme="default"]) .theme-preview { background:var(--ui-control); border-color:var(--ui-border); }
+body:not([data-ui-theme="default"]) .theme-preview-title { color:var(--ui-muted); }
+body:not([data-ui-theme="default"]) .theme-preview-item { background:var(--ui-card-back); border-color:var(--ui-card-border); }
+body:not([data-ui-theme="default"]) .theme-preview-more { background:var(--ui-card-back); border-color:var(--ui-card-border); color:var(--ui-muted); }
+
+body:not([data-ui-theme="default"]) { background:var(--ui-bg); color:var(--ui-text); transition:background .25s,color .25s; }
+body[data-ui-theme="glassmorphism"] {
+  background: radial-gradient(ellipse at 10% 10%,#7661b7 0%,transparent 45%),
+              radial-gradient(ellipse at 90% 75%,#147e9e 0%,transparent 48%),#17283f;
+  background-attachment:fixed;
+}
+body:not([data-ui-theme="default"]) .stats-bar { background:var(--ui-bar); box-shadow:var(--ui-shadow); }
+body:not([data-ui-theme="default"]) .stat-item { color:var(--ui-text); }
+body:not([data-ui-theme="default"]) .stat-item i { color:var(--ui-accent); }
+body:not([data-ui-theme="default"]) .setup-panel, body:not([data-ui-theme="default"]) .result-section, body:not([data-ui-theme="default"]) .modal-content, body:not([data-ui-theme="default"]) .end-game-panel {
+  background:var(--ui-panel); border:1px solid var(--ui-border);
+  border-radius:var(--ui-radius); box-shadow:var(--ui-shadow);
+}
+body:not([data-ui-theme="default"]) .field-group label { color:var(--ui-muted); }
+body:not([data-ui-theme="default"]) select, body:not([data-ui-theme="default"]) input[type="text"], body:not([data-ui-theme="default"]) button {
+  background:var(--ui-control); border:1px solid var(--ui-control-border);
+  color:var(--ui-text);
+}
+body:not([data-ui-theme="default"]) select:focus, body:not([data-ui-theme="default"]) input:focus { border-color:var(--ui-accent); box-shadow:0 0 0 3px color-mix(in srgb,var(--ui-accent) 25%,transparent); }
+body:not([data-ui-theme="default"]) button:not(.abort-btn):not(.delete-theme-btn):not(.close-btn) { background:var(--ui-button); color:#fff; }
+body:not([data-ui-theme="default"]) button:not(.abort-btn):not(.delete-theme-btn):not(.close-btn):hover:not(:disabled) { background:var(--ui-button-hover); }
+body:not([data-ui-theme="default"]) .card { background:var(--ui-card); border-radius:var(--ui-card-radius); box-shadow:var(--ui-shadow); }
+body:not([data-ui-theme="default"]) .card .card-front, body:not([data-ui-theme="default"]) .card .card-back { border-radius:var(--ui-card-radius); }
+body:not([data-ui-theme="default"]) .card .card-back { background:var(--ui-card-back); border-color:var(--ui-card-border); color:var(--ui-card-icon); }
+body:not([data-ui-theme="default"]) .card .card-front { background:var(--ui-control); }
+body:not([data-ui-theme="default"]) .card.matched { box-shadow:0 0 0 2px var(--ui-accent); }
+body:not([data-ui-theme="default"]) .result-list { color:var(--ui-text); }
+body:not([data-ui-theme="default"]) .result-list li { border-bottom-color:var(--ui-border); }
+body:not([data-ui-theme="default"]) .highscore-box { background:var(--ui-control); }
+body:not([data-ui-theme="default"]) .modal-content, body:not([data-ui-theme="default"]) .close-btn { border-color:var(--ui-border); }
+body[data-ui-theme="glassmorphism"] .stats-bar,
+body[data-ui-theme="glassmorphism"] .setup-panel,
+body[data-ui-theme="glassmorphism"] .result-section,
+body[data-ui-theme="glassmorphism"] .modal-content,
+body[data-ui-theme="glassmorphism"] .end-game-panel,
+body[data-ui-theme="glassmorphism"] .card .card-back { backdrop-filter:blur(18px); -webkit-backdrop-filter:blur(18px); }
+body[data-ui-theme="neon"] .card:not(.matched) { box-shadow:0 0 14px rgba(161,67,239,.3); }
+body[data-ui-theme="glassmorphism"] select option { background: #334256 !important; }
+
+.ui-theme-control select { width:auto; max-width:43px; padding:.55rem .9rem; font-size:.9rem; }
+select { -webkit-appearance: none;-moz-appearance: none;appearance: none; }
+
+.stats-bar, .board, .setup-panel, .result-section, h1, h3 { transition: all 0.8s; }
+
+h1 { width:100%; padding-bottom: 1.5rem; color: var(--ui-muted); text-align: center; letter-spacing: 0.3rem; font-size: 4rem; }
+
+
+body[data-ui-theme="neon"] {
+  h1 {
+    font-family: 'NeonLight';
+    font-weight: normal;
+    font-size: 6rem;
+    padding-bottom: 0;
+    color: var(--ui-accent);
+    text-shadow: 0 0 40px var(--ui-card-icon);
+  }
+  h3 {
+    font-family: 'NeonLight';
+    font-weight: normal;
+    font-size: 3rem;
+    letter-spacing: 0.15rem;
+    padding-bottom: 0;
+  }
+  button, button span, #timerDisplay, #movesDisplay {
+    font-family: 'NeonLight';
+    letter-spacing: 0.1rem;
+    font-weight: normal;
+    font-size:1.4rem;
+  }
+}
+
+
+body[data-ui-theme="retro"] {
+  h1 {
+    font-family: 'RetroFancy';
+    font-weight: normal;
+    font-size: 6rem;
+    padding-bottom: 0;
+    color: var(--ui-accent);
+    text-shadow: 0 0 40px var(--ui-card-icon);
+  }
+  h3 {
+    font-family: 'RetroFancy';
+    font-weight: normal;
+    font-size: 3rem;
+    letter-spacing: 0.15rem;
+    padding-bottom: 0;
+  }
+  button, button span, #timerDisplay, #movesDisplay {
+    font-family: 'RetroFancy';
+    letter-spacing: 0.1rem;
+    font-weight: normal;
+    font-size:1.4rem;
+  }
+}
+
+
+body[data-ui-theme="glassmorphism"] {
+  h1 {
+    font-family: 'Valeska';
+    font-weight: normal;
+    font-size: 6rem;
+    padding-bottom: 0;
+    color: var(--ui-accent);
+    text-shadow: 0 0 40px var(--ui-card-icon);
+  }
+  h3 {
+    font-family: 'Valeska';
+    font-weight: normal;
+    font-size: 3rem;
+    letter-spacing: 0.15rem;
+    padding-bottom: 0;
+  }
+  button, button span {
+    font-family: 'Valeska';
+    letter-spacing: 0.1rem;
+    font-weight: normal;
+    font-size:1.4rem;
+  }
+}
+
+body[data-ui-theme="minimal"] {
+  h1 {
+    font-family: 'Noble';
+    font-weight: normal;
+    font-size: 6rem;
+    padding-bottom: 0;
+    text-shadow: 0 0 40px var(--ui-card-icon);
+  }
+  h3 {
+    font-family: 'Noble';
+    font-weight: normal;
+    font-size: 3rem;
+    letter-spacing: 0.15rem;
+    padding-bottom: 0;
+  }
+  button, button span, #timerDisplay, #movesDisplay {
+    font-family: 'Noble';
+    letter-spacing: 0.1rem;
+    font-weight: normal;
+    font-size:1.4rem;
+  }
+}
+
+
+.small-show { display: none;}
+/* responsive */
+@media (max-width: 600px) {
+  .stats-bar { gap: 1rem; padding: 0.7rem 1rem; }
+  .stat-item { font-size: 1rem; }
+  .stat-item i { font-size: 1.4rem; }
+  body { padding: 0.8rem; }
+  .abort-btn { padding: 0.5rem 1rem; }
+  .abort-btn span { display: none;}
+  body[data-ui-theme="neon"] h3 {
+    font-size: 2rem;
+    letter-spacing: 0.1rem;
+  }
+  .theme-preview-grid { grid-template-columns: repeat(auto-fill, minmax(52px, 1fr)); }
+  .small-hidden { display:none !important; }
+  .small-show { display:flex !important; }
+}
+</style>
 </head>
 <body>
 <div class="app">
@@ -438,22 +657,25 @@
     <div class="stat-item"><i class="bi bi-lightning-charge"></i> <span id="movesDisplay">0</span></div>
     <div class="stat-item ui-theme-control">
       <select id="uiThemeSelect" aria-label="Design auswählen">
-        <option value="default">Default</option>
+        <option value="default">Dark</option>
         <option value="neon">Neon</option>
         <option value="retro">Retro</option>
-        <option value="minimal">Minimal</option>
         <option value="glassmorphism">Glass</option>
+        <option value="minimal">Light</option>
       </select>
     </div>
     <div class="stats-item">
         <button class="abort-btn hidden" id="abortGameBtn" title="Spiel abbrechen">
-            <i class="bi bi-x-octagon"></i> Spiel abbrechen
+            <i class="bi bi-x-octagon"></i> <span>Spiel abbrechen</span>
         </button>
     </div>
   </div>
 
   <!-- Startansicht / Setup -->
   <div class="setup-panel" id="setupPanel">
+    <div class="row">
+      <h1>Memory</h1>
+    </div>
     <div class="row">
       <div class="field-group">
         <label for="gameSelect">Spieltyp</label>
@@ -467,6 +689,14 @@
         </div>
       </div>
     </div>
+    <!-- NEU: Bildervorschau -->
+  <div class="theme-preview" id="themePreview">
+    <div class="theme-preview-title">
+      <span><i class="bi bi-images"></i> Bildervorschau</span>
+      <span class="preview-count" id="themePreviewCount"></span>
+    </div>
+    <div class="theme-preview-grid" id="themePreviewGrid"></div>
+  </div>
     <div class="button-row">
       <button id="startGameBtn"><i class="bi bi-play-fill"></i> Spiel starten</button>
       <button id="openCreateThemeBtn"><i class="bi bi-plus-circle"></i> Thema erstellen</button>
@@ -477,6 +707,14 @@
   <!-- Spielbrett -->
   <div class="board" id="gameBoard"></div>
 
+  <!-- Endgame-Overlay (Name speichern) -->
+  <div id="endGamePanel" class="end-game-panel hidden">
+    <h2><i class="bi bi-flag"></i> Geschafft!</h2>
+    <p id="endGameStats"></p>
+    <input type="text" id="playerNameInput" placeholder="Dein Name" value="Memory" maxlength="30">
+    <button id="saveScoreBtn"><i class="bi bi-save"></i> Ergebnis speichern</button>
+  </div>
+
   <!-- Ergebnis- und Highscorebereich -->
   <div class="result-section" id="resultSection">
     <div class="result-header">
@@ -486,13 +724,7 @@
     <ul class="result-list" id="resultList"></ul>
   </div>
 
-  <!-- Endgame-Overlay (Name speichern) -->
-  <div id="endGamePanel" class="end-game-panel hidden">
-    <h2><i class="bi bi-flag"></i> Geschafft!</h2>
-    <p id="endGameStats"></p>
-    <input type="text" id="playerNameInput" placeholder="Dein Name" value="Memory" maxlength="30">
-    <button id="saveScoreBtn"><i class="bi bi-save"></i> Ergebnis speichern</button>
-  </div>
+  
 </div>
 
 <!-- Modal: Thema erstellen -->
@@ -516,720 +748,799 @@
 </div>
 
 <script>
-  // Designwechsel: unabhängig von den Bildthemen und auch während des Spiels.
-  const UI_THEME_STORAGE_KEY = 'memory_ui_theme';
-  const uiThemeSelect = document.getElementById('uiThemeSelect');
-  const availableUiThemes = ['default','neon','retro','minimal','glassmorphism'];
-  function applyUiTheme(value) {
-    const theme = availableUiThemes.includes(value) ? value : 'default';
-    document.body.dataset.uiTheme = theme;
-    uiThemeSelect.value = theme;
-    try { localStorage.setItem(UI_THEME_STORAGE_KEY, theme); } catch (_) {}
-  }
-  uiThemeSelect.addEventListener('change', () => applyUiTheme(uiThemeSelect.value));
-  let savedUiTheme = 'default';
-  try { savedUiTheme = localStorage.getItem(UI_THEME_STORAGE_KEY) || 'default'; } catch (_) {}
-  applyUiTheme(savedUiTheme);
+// Designwechsel: unabhängig von den Bildthemen und auch während des Spiels.
+const UI_THEME_STORAGE_KEY = 'memory_ui_theme';
+const uiThemeSelect = document.getElementById('uiThemeSelect');
+const availableUiThemes = ['default','neon','retro','minimal','glassmorphism'];
 
-  // ==================== KONFIGURATION ====================
-  const GAMES = {
-    easy:      { label: "6 Paare",      grid: [4, 3], selection: 2 },   // 12 Karten
-    medium:    { label: "10 Paare",     grid: [5, 4], selection: 2 },   // 20 Karten
-    triplets4: { label: "4 Triplets",   grid: [3, 4], selection: 3 },   // 12 Karten
-    quads4:    { label: "4 Quads",      grid: [4, 4], selection: 4 },   // 16 Karten
-    triplet6:  { label: "6 Triplets",   grid: [3, 6], selection: 3 },   // 18 Karten
-    quad5:     { label: "5 Quads",      grid: [4, 5], selection: 4 },   // 20 Karten
-  };
 
-  const THEMES = {
-    hannabarbera: { label: "Hanna Barbera", custom: false, images: 39, format: 'jpg' },
-    looneytunes: { label: "Looney Tunes", custom: false, images: 29, format: 'jpg' },
-    marvelheroes: { label: "Marvel Heroes", custom: false, images: 15, format: 'webp' },
-    simpsons: { label: "Simpsons", custom: false, images: 29, format: 'webp' },
-    tokioparkplatz: { label: "Tokio Parkplatz", custom: false, images: 65, format: 'webp' },
-  };
 
-  // Custom-Themes werden aus LocalStorage geladen (Key: themeKey)
-  const STORAGE_KEY_THEMES = 'memory_custom_themes';
-  const STORAGE_KEY_RESULTS = 'memory_results';
-  const STORAGE_KEY_HIGHSCORES = 'memory_highscores';
-  const DB_NAME = 'MemoryThemeDB';
-  const DB_STORE = 'themeImages';
 
-  // ==================== STATE ====================
-  let state = {
-    gameKey: 'easy',
-    themeKey: 'flowers',
-    // Spielfeld
-    cards: [],           // { id, setIndex, imageKey, matched }
-    firstSelection: [],  // aufgedeckte Karten (max selection)
-    matchedSets: 0,
-    totalSets: 0,
-    moves: 0,
-    gameActive: false,
-    startTime: null,
-    timerInterval: null,
-    elapsed: 0,
-    inputLocked: false,
-    selectionSize: 2,
-  };
+function applyUiTheme(value) {
+  const theme = availableUiThemes.includes(value) ? value : 'default';
+  document.body.dataset.uiTheme = theme;
+  uiThemeSelect.value = theme;
+  try { localStorage.setItem(UI_THEME_STORAGE_KEY, theme); } catch (_) {}
+}
+uiThemeSelect.addEventListener('change', () => applyUiTheme(uiThemeSelect.value));
+let savedUiTheme = 'default';
+try { savedUiTheme = localStorage.getItem(UI_THEME_STORAGE_KEY) || 'default'; } catch (_) {}
+applyUiTheme(savedUiTheme);
 
-  // IndexedDB-Verbindung
-  let db = null;
+// ==================== KONFIGURATION ====================
+const GAMES = {
+  easy:      { label: "6 Paare",      grid: [4, 3], selection: 2 },   // 12 Karten
+  medium:    { label: "10 Paare",     grid: [5, 4], selection: 2 },   // 20 Karten
+  triplets4: { label: "4 Triplets",   grid: [3, 4], selection: 3 },   // 12 Karten
+  quads4:    { label: "4 Quads",      grid: [4, 4], selection: 4 },   // 16 Karten
+  triplet6:  { label: "6 Triplets",   grid: [3, 6], selection: 3 },   // 18 Karten
+  quad5:     { label: "5 Quads",      grid: [4, 5], selection: 4 },   // 20 Karten
+};
 
-  const abortGameBtn = document.getElementById('abortGameBtn');
+const THEMES = {
+  hannabarbera: { label: "Hanna Barbera", custom: false, images: 39, format: 'jpg' },
+  looneytunes: { label: "Looney Tunes", custom: false, images: 29, format: 'jpg' },
+  marvelheroes: { label: "Marvel Heroes", custom: false, images: 15, format: 'webp' },
+  simpsons: { label: "Simpsons", custom: false, images: 29, format: 'webp' },
+  tokioparkplatz: { label: "Tokio Parkplatz", custom: false, images: 65, format: 'webp' },
+};
 
-  // ==================== STORAGE-SCHICHT ====================
-  async function initDB() {
-    return new Promise((resolve, reject) => {
-      const req = indexedDB.open(DB_NAME, 1);
-      req.onerror = () => reject(req.error);
-      req.onsuccess = () => { db = req.result; resolve(db); };
-      req.onupgradeneeded = (e) => {
-        const db = e.target.result;
-        if (!db.objectStoreNames.contains(DB_STORE)) {
-          db.createObjectStore(DB_STORE);
-        }
-      };
-    });
-  }
+// Custom-Themes werden aus LocalStorage geladen (Key: themeKey)
+const STORAGE_KEY_THEMES = 'memory_custom_themes';
+const STORAGE_KEY_RESULTS = 'memory_results';
+const STORAGE_KEY_HIGHSCORES = 'memory_highscores';
+const DB_NAME = 'MemoryThemeDB';
+const DB_STORE = 'themeImages';
 
-  // Custom-Themes aus LocalStorage holen
-  function getCustomThemes() {
-    try {
-      const raw = localStorage.getItem(STORAGE_KEY_THEMES);
-      return raw ? JSON.parse(raw) : {};
-    } catch { return {}; }
-  }
+// ==================== STATE ====================
+let state = {
+  gameKey: 'easy',
+  themeKey: 'flowers',
+  // Spielfeld
+  cards: [],           // { id, setIndex, imageKey, matched }
+  firstSelection: [],  // aufgedeckte Karten (max selection)
+  matchedSets: 0,
+  totalSets: 0,
+  moves: 0,
+  gameActive: false,
+  startTime: null,
+  timerInterval: null,
+  elapsed: 0,
+  inputLocked: false,
+  selectionSize: 2,
+};
 
-  function saveCustomThemes(themes) {
-    localStorage.setItem(STORAGE_KEY_THEMES, JSON.stringify(themes));
-  }
+// IndexedDB-Verbindung
+let db = null;
 
-  // Bilder für ein Custom-Theme in IndexedDB speichern (Array von dataURLs)
-  async function storeThemeImages(themeKey, imageDataArray) {
-    return new Promise((resolve, reject) => {
-      const tx = db.transaction(DB_STORE, 'readwrite');
-      const store = tx.objectStore(DB_STORE);
-      // imageDataArray = [{ name: "1", data: dataURL }, ...]
-      store.put(imageDataArray, themeKey);
-      tx.oncomplete = () => resolve();
-      tx.onerror = () => reject(tx.error);
-    });
-  }
+const abortGameBtn = document.getElementById('abortGameBtn');
 
-  // Bilder für ein Theme aus IndexedDB holen
-  async function getThemeImages(themeKey) {
-    return new Promise((resolve, reject) => {
-      const tx = db.transaction(DB_STORE, 'readonly');
-      const store = tx.objectStore(DB_STORE);
-      const req = store.get(themeKey);
-      req.onsuccess = () => resolve(req.result || []);
-      req.onerror = () => reject(req.error);
-    });
-  }
-
-  // Theme aus IndexedDB löschen
-  async function deleteThemeImages(themeKey) {
-    return new Promise((resolve, reject) => {
-      const tx = db.transaction(DB_STORE, 'readwrite');
-      const store = tx.objectStore(DB_STORE);
-      store.delete(themeKey);
-      tx.oncomplete = () => resolve();
-      tx.onerror = () => reject(tx.error);
-    });
-  }
-
-  // Ergebnisse (letzte 20)
-  function getResults() {
-    try {
-      const raw = localStorage.getItem(STORAGE_KEY_RESULTS);
-      return raw ? JSON.parse(raw) : [];
-    } catch { return []; }
-  }
-
-  function saveResults(results) {
-    localStorage.setItem(STORAGE_KEY_RESULTS, JSON.stringify(results.slice(0, 20)));
-  }
-
-  // Highscores (pro Spiel+Thema)
-  function getHighscores() {
-    try {
-      const raw = localStorage.getItem(STORAGE_KEY_HIGHSCORES);
-      return raw ? JSON.parse(raw) : {};
-    } catch { return {}; }
-  }
-
-  function saveHighscores(hs) {
-    localStorage.setItem(STORAGE_KEY_HIGHSCORES, JSON.stringify(hs));
-  }
-
-  // ==================== RENDERING / UI ====================
-  const gameSelect = document.getElementById('gameSelect');
-  const themeSelect = document.getElementById('themeSelect');
-  const startBtn = document.getElementById('startGameBtn');
-  const deleteThemeBtn = document.getElementById('deleteThemeBtn');
-  const themeWarning = document.getElementById('themeWarning');
-  const gameBoard = document.getElementById('gameBoard');
-  const timerDisplay = document.getElementById('timerDisplay');
-  const movesDisplay = document.getElementById('movesDisplay');
-  const setupPanel = document.getElementById('setupPanel');
-  const resultList = document.getElementById('resultList');
-  const highscoreDisplay = document.getElementById('highscoreDisplay');
-  const endGamePanel = document.getElementById('endGamePanel');
-  const endGameStats = document.getElementById('endGameStats');
-  const playerNameInput = document.getElementById('playerNameInput');
-  const saveScoreBtn = document.getElementById('saveScoreBtn');
-
-  // Spielauswahl befüllen
-  function populateGameSelect() {
-    gameSelect.innerHTML = '';
-    for (const [key, game] of Object.entries(GAMES)) {
-      const opt = document.createElement('option');
-      opt.value = key;
-      opt.textContent = game.label;
-      gameSelect.appendChild(opt);
-    }
-    gameSelect.value = state.gameKey;
-  }
-
-  // Themenauswahl befüllen (inkl. Custom)
-  function populateThemeSelect() {
-    const custom = getCustomThemes();
-    themeSelect.innerHTML = '';
-    // Standard-Themes
-    for (const [key, theme] of Object.entries(THEMES)) {
-      const opt = document.createElement('option');
-      opt.value = key;
-      opt.textContent = theme.label;
-      themeSelect.appendChild(opt);
-    }
-    // Custom-Themes
-    for (const [key, theme] of Object.entries(custom)) {
-      const opt = document.createElement('option');
-      opt.value = key;
-      opt.textContent = `${theme.label} (custom)`;
-      themeSelect.appendChild(opt);
-    }
-    if (themeSelect.options.length > 0) {
-      if (!themeSelect.querySelector(`option[value="${state.themeKey}"]`)) {
-        state.themeKey = themeSelect.options[0].value;
+// ==================== STORAGE-SCHICHT ====================
+async function initDB() {
+  return new Promise((resolve, reject) => {
+    const req = indexedDB.open(DB_NAME, 1);
+    req.onerror = () => reject(req.error);
+    req.onsuccess = () => { db = req.result; resolve(db); };
+    req.onupgradeneeded = (e) => {
+      const db = e.target.result;
+      if (!db.objectStoreNames.contains(DB_STORE)) {
+        db.createObjectStore(DB_STORE);
       }
-      themeSelect.value = state.themeKey;
+    };
+  });
+}
+
+// Custom-Themes aus LocalStorage holen
+function getCustomThemes() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY_THEMES);
+    return raw ? JSON.parse(raw) : {};
+  } catch { return {}; }
+}
+
+function saveCustomThemes(themes) {
+  localStorage.setItem(STORAGE_KEY_THEMES, JSON.stringify(themes));
+}
+
+// Bilder für ein Custom-Theme in IndexedDB speichern (Array von dataURLs)
+async function storeThemeImages(themeKey, imageDataArray) {
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(DB_STORE, 'readwrite');
+    const store = tx.objectStore(DB_STORE);
+    // imageDataArray = [{ name: "1", data: dataURL }, ...]
+    store.put(imageDataArray, themeKey);
+    tx.oncomplete = () => resolve();
+    tx.onerror = () => reject(tx.error);
+  });
+}
+
+// Bilder für ein Theme aus IndexedDB holen
+async function getThemeImages(themeKey) {
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(DB_STORE, 'readonly');
+    const store = tx.objectStore(DB_STORE);
+    const req = store.get(themeKey);
+    req.onsuccess = () => resolve(req.result || []);
+    req.onerror = () => reject(req.error);
+  });
+}
+
+// Theme aus IndexedDB löschen
+async function deleteThemeImages(themeKey) {
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(DB_STORE, 'readwrite');
+    const store = tx.objectStore(DB_STORE);
+    store.delete(themeKey);
+    tx.oncomplete = () => resolve();
+    tx.onerror = () => reject(tx.error);
+  });
+}
+
+// Ergebnisse (letzte 20)
+function getResults() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY_RESULTS);
+    return raw ? JSON.parse(raw) : [];
+  } catch { return []; }
+}
+
+function saveResults(results) {
+  localStorage.setItem(STORAGE_KEY_RESULTS, JSON.stringify(results.slice(0, 20)));
+}
+
+// Highscores (pro Spiel+Thema)
+function getHighscores() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY_HIGHSCORES);
+    return raw ? JSON.parse(raw) : {};
+  } catch { return {}; }
+}
+
+function saveHighscores(hs) {
+  localStorage.setItem(STORAGE_KEY_HIGHSCORES, JSON.stringify(hs));
+}
+
+// ==================== RENDERING / UI ====================
+const gameSelect = document.getElementById('gameSelect');
+const themeSelect = document.getElementById('themeSelect');
+const startBtn = document.getElementById('startGameBtn');
+const deleteThemeBtn = document.getElementById('deleteThemeBtn');
+const themeWarning = document.getElementById('themeWarning');
+const gameBoard = document.getElementById('gameBoard');
+const timerDisplay = document.getElementById('timerDisplay');
+const movesDisplay = document.getElementById('movesDisplay');
+const setupPanel = document.getElementById('setupPanel');
+const resultList = document.getElementById('resultList');
+const highscoreDisplay = document.getElementById('highscoreDisplay');
+const endGamePanel = document.getElementById('endGamePanel');
+const endGameStats = document.getElementById('endGameStats');
+const playerNameInput = document.getElementById('playerNameInput');
+const saveScoreBtn = document.getElementById('saveScoreBtn');
+// NEU: Vorschau-Elemente
+const themePreviewGrid = document.getElementById('themePreviewGrid');
+const themePreviewCount = document.getElementById('themePreviewCount');
+
+// Spielauswahl befüllen
+function populateGameSelect() {
+  gameSelect.innerHTML = '';
+  for (const [key, game] of Object.entries(GAMES)) {
+    const opt = document.createElement('option');
+    opt.value = key;
+    opt.textContent = game.label;
+    gameSelect.appendChild(opt);
+  }
+  gameSelect.value = state.gameKey;
+}
+
+// Themenauswahl befüllen (inkl. Custom)
+function populateThemeSelect() {
+  const custom = getCustomThemes();
+  themeSelect.innerHTML = '';
+  // Standard-Themes
+  for (const [key, theme] of Object.entries(THEMES)) {
+    const opt = document.createElement('option');
+    opt.value = key;
+    opt.textContent = theme.label;
+    themeSelect.appendChild(opt);
+  }
+  // Custom-Themes
+  for (const [key, theme] of Object.entries(custom)) {
+    const opt = document.createElement('option');
+    opt.value = key;
+    opt.textContent = `${theme.label} (custom)`;
+    themeSelect.appendChild(opt);
+  }
+  if (themeSelect.options.length > 0) {
+    if (!themeSelect.querySelector(`option[value="${state.themeKey}"]`)) {
+      state.themeKey = themeSelect.options[0].value;
     }
-    validateThemeAndGame();
+    themeSelect.value = state.themeKey;
+  }
+  validateThemeAndGame();
+  renderThemePreview(); // NEU
+}
+
+// Prüfen, ob Thema genügend Bilder für das Spiel hat
+function validateThemeAndGame() {
+  const game = GAMES[gameSelect.value];
+  const themeKey = themeSelect.value;
+  const custom = getCustomThemes();
+  let themeImages = 0;
+  if (THEMES[themeKey]) {
+    themeImages = THEMES[themeKey].images;
+  } else if (custom[themeKey]) {
+    themeImages = custom[themeKey].images;
+  }
+  const neededSets = (game.grid[0] * game.grid[1]) / game.selection;
+  if (themeImages < neededSets) {
+    startBtn.disabled = true;
+    themeWarning.textContent = 'Thema hat zu wenig Bilder für das Spiel';
+    return false;
+  } else {
+    startBtn.disabled = false;
+    themeWarning.textContent = '';
+    return true;
+  }
+}
+
+// NEU: Vorschau rendern
+async function renderThemePreview() {
+  const themeKey = themeSelect.value;
+  const custom = getCustomThemes();
+  themePreviewGrid.innerHTML = '';
+  themePreviewCount.textContent = '';
+
+  // Info sammeln
+  let totalImages = 0;
+  let smallImages = 0;
+  let getImageSrc;
+
+  if (THEMES[themeKey]) {
+    const t = THEMES[themeKey];
+    totalImages = t.images;
+    getImageSrc = (idx) => `./img/${themeKey}/${idx + 1}.${t.format}`;
+  } else if (custom[themeKey]) {
+    const t = custom[themeKey];
+    totalImages = t.images;
+    let stored = [];
+    try { stored = await getThemeImages(themeKey); } catch (_) {}
+    getImageSrc = (idx) => {
+      const item = stored[idx];
+      return item ? item.data : null;
+    };
+  } else {
+    themePreviewGrid.innerHTML = '<div class="theme-preview-empty">Kein Thema ausgewählt.</div>';
+    return;
   }
 
-  // Prüfen, ob Thema genügend Bilder für das Spiel hat
-  function validateThemeAndGame() {
-    const game = GAMES[gameSelect.value];
-    const themeKey = themeSelect.value;
-    const custom = getCustomThemes();
-    let themeImages = 0;
-    if (THEMES[themeKey]) {
-      themeImages = THEMES[themeKey].images;
-    } else if (custom[themeKey]) {
-      themeImages = custom[themeKey].images;
-    }
-    const neededSets = (game.grid[0] * game.grid[1]) / game.selection;
-    if (themeImages < neededSets) {
-      startBtn.disabled = true;
-      themeWarning.textContent = 'Thema hat zu wenig Bilder für das Spiel';
-      return false;
-    } else {
-      startBtn.disabled = false;
-      themeWarning.textContent = '';
-      return true;
-    }
+  const MAX_THUMBS = 12;
+  const shown = Math.min(totalImages, MAX_THUMBS);
+
+  for (let i = 0; i < shown; i++) {
+    const src = getImageSrc(i);
+    if (!src) continue;
+    const item = document.createElement('div');
+    item.className = 'theme-preview-item';
+    const img = document.createElement('img');
+    img.src = src;
+    img.alt = `Vorschau ${i + 1}`;
+    img.loading = 'lazy';
+    item.appendChild(img);
+    if( i > 6 ) item.classList.add('small-hidden');
+    else smallImages++;
+    themePreviewGrid.appendChild(item);
   }
 
-  // Highscore-Anzeige aktualisieren
-  function updateHighscoreDisplay() {
-    const game = gameSelect.value;
-    const theme = themeSelect.value;
-    const key = `${game}_${theme}`;
-    const hs = getHighscores();
-    const entry = hs[key];
-    if (entry) {
-      highscoreDisplay.textContent = `Highscore: ${formatTime(entry.elapsed)} (${entry.moves} Züge)`;
-    } else {
-      highscoreDisplay.textContent = 'Highscore: –';
-    }
+  if (totalImages > MAX_THUMBS) {
+    const more = document.createElement('div');
+    more.className = 'theme-preview-more';
+    more.textContent = `+${totalImages - MAX_THUMBS}`;
+    more.classList.add('small-hidden');
+    themePreviewGrid.appendChild(more);
+  }
+  if (totalImages > smallImages ) {
+    const more = document.createElement('div');
+    more.className = 'theme-preview-more';
+    more.textContent = `+${totalImages - smallImages}`;
+    more.classList.add('small-show');
+    themePreviewGrid.appendChild(more);
   }
 
-  // Ergebnisliste rendern
-  function renderResults() {
-    const results = getResults();
-    resultList.innerHTML = '';
-    if (results.length === 0) {
-      resultList.innerHTML = '<li>Noch keine Ergebnisse</li>';
-      return;
-    }
-    results.forEach(r => {
-      const li = document.createElement('li');
-      li.innerHTML = `<span>${escapeHtml(r.name)} · ${GAMES[r.game]?.label || r.game} · ${formatTime(r.elapsed)} · ${r.moves} Züge</span>`;
-      resultList.appendChild(li);
-    });
-  }
+  themePreviewCount.textContent = `${totalImages} Bilder`;
+}
 
-  function escapeHtml(text) {
-    const div = document.createElement('div');
-    div.textContent = text;
-    return div.innerHTML;
+// Highscore-Anzeige aktualisieren
+function updateHighscoreDisplay() {
+  const game = gameSelect.value;
+  const theme = themeSelect.value;
+  const key = `${game}_${theme}`;
+  const hs = getHighscores();
+  const entry = hs[key];
+  if (entry) {
+    highscoreDisplay.textContent = `Highscore: ${formatTime(entry.elapsed)} (${entry.moves} Züge)`;
+  } else {
+    highscoreDisplay.textContent = 'Highscore: –';
   }
+}
 
-  function formatTime(seconds) {
-    const m = Math.floor(seconds / 60);
-    const s = Math.floor(seconds % 60);
-    return `${m}:${s.toString().padStart(2, '0')}`;
+// Ergebnisliste rendern
+function renderResults() {
+  const results = getResults();
+  resultList.innerHTML = '';
+  if (results.length === 0) {
+    resultList.innerHTML = '<li>Noch keine Ergebnisse</li>';
+    return;
   }
+  results.forEach(r => {
+    const li = document.createElement('li');
+    li.innerHTML = `<span>${escapeHtml(r.name)} · ${GAMES[r.game]?.label || r.game} · ${formatTime(r.elapsed)} · ${r.moves} Züge</span>`;
+    resultList.appendChild(li);
+  });
+}
 
-  // Timer
-  function startTimer() {
-    if (state.timerInterval) clearInterval(state.timerInterval);
-    state.startTime = Date.now() - (state.elapsed * 1000);
-    state.timerInterval = setInterval(() => {
-      state.elapsed = Math.floor((Date.now() - state.startTime) / 1000);
-      timerDisplay.textContent = formatTime(state.elapsed);
-    }, 200);
-  }
+function escapeHtml(text) {
+  const div = document.createElement('div');
+  div.textContent = text;
+  return div.innerHTML;
+}
 
-  function stopTimer() {
-    if (state.timerInterval) {
-      clearInterval(state.timerInterval);
-      state.timerInterval = null;
-    }
+function formatTime(seconds) {
+  const m = Math.floor(seconds / 60);
+  const s = Math.floor(seconds % 60);
+  return `${m}:${s.toString().padStart(2, '0')}`;
+}
+
+// Timer
+function startTimer() {
+  if (state.timerInterval) clearInterval(state.timerInterval);
+  state.startTime = Date.now() - (state.elapsed * 1000);
+  state.timerInterval = setInterval(() => {
     state.elapsed = Math.floor((Date.now() - state.startTime) / 1000);
     timerDisplay.textContent = formatTime(state.elapsed);
+  }, 200);
+}
+
+function stopTimer() {
+  if (state.timerInterval) {
+    clearInterval(state.timerInterval);
+    state.timerInterval = null;
+  }
+  state.elapsed = Math.floor((Date.now() - state.startTime) / 1000);
+  timerDisplay.textContent = formatTime(state.elapsed);
+}
+
+// ==================== SPIELLOGIK ====================
+async function startGame() {
+  // Validierung
+  if (!validateThemeAndGame()) return;
+
+  const gameKey = gameSelect.value;
+  const themeKey = themeSelect.value;
+  const game = GAMES[gameKey];
+  const rows = game.grid[0];
+  const cols = game.grid[1];
+  const selection = game.selection;
+
+  // Theme-Info besorgen
+  let themeInfo = null;
+  let imageDataArray = []; // Array von dataURLs (bei custom) oder URLs
+  if (THEMES[themeKey]) {
+    themeInfo = THEMES[themeKey];
+    const format = themeInfo.format;
+    // Standard-Theme: Bilder liegen unter ./img/{themeKey}/1.{format}, ...
+    const numSets = (rows * cols) / selection;
+    for (let i = 1; i <= numSets; i++) {
+      imageDataArray.push(`./img/${themeKey}/${i}.${format}`);
+    }
+  } else {
+    const custom = getCustomThemes();
+    themeInfo = custom[themeKey];
+    if (!themeInfo) {
+      alert('Thema nicht gefunden!');
+      return;
+    }
+    const numSets = (rows * cols) / selection;
+    const stored = await getThemeImages(themeKey); // [{name, data}]
+    if (!stored || stored.length < numSets) {
+      alert('Nicht genügend Bilder im Custom-Thema gespeichert.');
+      return;
+    }
+    // Wir nehmen die ersten numSets Bilder (dataURLs)
+    imageDataArray = stored.slice(0, numSets).map(item => item.data);
   }
 
-  // ==================== SPIELLOGIK ====================
-  async function startGame() {
-    // Validierung
-    if (!validateThemeAndGame()) return;
+  // Karten erstellen: Jedes Set kommt selection-mal vor
+  const totalCards = rows * cols;
+  const numSets = totalCards / selection;
+  let cards = [];
+  for (let setIdx = 0; setIdx < numSets; setIdx++) {
+    const imgSrc = imageDataArray[setIdx];
+    for (let n = 0; n < selection; n++) {
+      cards.push({
+        id: crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).substring(2),
+        setIndex: setIdx,
+        imageSrc: imgSrc,
+        matched: false,
+      });
+    }
+  }
+  // Zufällig mischen
+  shuffleArray(cards);
 
-    const gameKey = gameSelect.value;
-    const themeKey = themeSelect.value;
-    const game = GAMES[gameKey];
-    const rows = game.grid[0];
-    const cols = game.grid[1];
-    const selection = game.selection;
+  // State setzen
+  state.cards = cards;
+  state.firstSelection = [];
+  state.matchedSets = 0;
+  state.totalSets = numSets;
+  state.moves = 0;
+  state.gameActive = true;
+  state.inputLocked = false;
+  state.selectionSize = selection;
+  state.gameKey = gameKey;
+  state.themeKey = themeKey;
+  state.elapsed = 0;
+  timerDisplay.textContent = '0:00';
+  movesDisplay.textContent = '0';
+  if (state.timerInterval) clearInterval(state.timerInterval);
+  state.startTime = null;
 
-    // Theme-Info besorgen
-    let themeInfo = null;
-    let imageDataArray = []; // Array von dataURLs (bei custom) oder URLs
-    if (THEMES[themeKey]) {
-      themeInfo = THEMES[themeKey];
-      const format = themeInfo.format;
-      // Standard-Theme: Bilder liegen unter ./img/{themeKey}/1.{format}, ...
-      const numSets = (rows * cols) / selection;
-      for (let i = 1; i <= numSets; i++) {
-        imageDataArray.push(`./img/${themeKey}/${i}.${format}`);
+  // UI umschalten
+  setupPanel.classList.add('hidden');
+  endGamePanel.classList.add('hidden');
+  renderBoard(rows, cols);
+  // Timer startet beim ersten Aufdecken
+
+  abortGameBtn.classList.remove('hidden');
+}
+
+function shuffleArray(arr) {
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+}
+
+function renderBoard(rows, cols) {
+  gameBoard.style.gridTemplateColumns = `repeat(${cols}, 1fr)`;
+  gameBoard.style.gridTemplateRows = `repeat(${rows}, 1fr)`;
+  gameBoard.innerHTML = '';
+
+  state.cards.forEach((card, idx) => {
+    const cardEl = document.createElement('div');
+    cardEl.className = 'card';
+    cardEl.dataset.index = idx;
+    cardEl.dataset.setIndex = card.setIndex;
+
+    const back = document.createElement('div');
+    back.className = 'card-back';
+    back.innerHTML = '<i class="bi bi-question-lg"></i>';
+
+    const front = document.createElement('div');
+    front.className = 'card-front';
+    const img = document.createElement('img');
+    img.src = card.imageSrc;
+    img.alt = 'Memory Bild';
+    img.loading = 'lazy';
+    front.appendChild(img);
+
+    cardEl.appendChild(back);
+    cardEl.appendChild(front);
+    cardEl.addEventListener('click', () => onCardClick(idx));
+    gameBoard.appendChild(cardEl);
+  });
+}
+
+function onCardClick(index) {
+  if (!state.gameActive || state.inputLocked) return;
+  const card = state.cards[index];
+  if (card.matched) return;
+  const cardEl = gameBoard.children[index];
+  if (cardEl.classList.contains('flipped')) return; // bereits aufgedeckt (sollte nicht passieren)
+
+  // Erster Klick? Timer starten
+  if (state.startTime === null) {
+    state.startTime = Date.now();
+    startTimer();
+  }
+
+  // Karte aufdecken
+  cardEl.classList.add('flipped');
+  state.firstSelection.push({ index, setIndex: card.setIndex, el: cardEl });
+
+  if (state.firstSelection.length === state.selectionSize) {
+    state.inputLocked = true;
+    state.moves++;
+    movesDisplay.textContent = state.moves;
+
+    const selection = state.firstSelection;
+    const firstSet = selection[0].setIndex;
+    const allSame = selection.every(s => s.setIndex === firstSet);
+
+    if (allSame) {
+      // Erfolg: alle Karten des Sets bleiben aufgedeckt (matched)
+      selection.forEach(s => {
+        const c = state.cards[s.index];
+        c.matched = true;
+        s.el.classList.add('matched');
+      });
+      state.matchedSets++;
+      state.firstSelection = [];
+      state.inputLocked = false;
+
+      // Spielende prüfen
+      if (state.matchedSets === state.totalSets) {
+        endGame();
       }
     } else {
-      const custom = getCustomThemes();
-      themeInfo = custom[themeKey];
-      if (!themeInfo) {
-        alert('Thema nicht gefunden!');
-        return;
-      }
-      const numSets = (rows * cols) / selection;
-      const stored = await getThemeImages(themeKey); // [{name, data}]
-      if (!stored || stored.length < numSets) {
-        alert('Nicht genügend Bilder im Custom-Thema gespeichert.');
-        return;
-      }
-      // Wir nehmen die ersten numSets Bilder (dataURLs)
-      imageDataArray = stored.slice(0, numSets).map(item => item.data);
-    }
-
-    // Karten erstellen: Jedes Set kommt selection-mal vor
-    const totalCards = rows * cols;
-    const numSets = totalCards / selection;
-    let cards = [];
-    for (let setIdx = 0; setIdx < numSets; setIdx++) {
-      const imgSrc = imageDataArray[setIdx];
-      for (let n = 0; n < selection; n++) {
-        cards.push({
-          id: crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).substring(2),
-          setIndex: setIdx,
-          imageSrc: imgSrc,
-          matched: false,
-        });
-      }
-    }
-    // Zufällig mischen
-    shuffleArray(cards);
-
-    // State setzen
-    state.cards = cards;
-    state.firstSelection = [];
-    state.matchedSets = 0;
-    state.totalSets = numSets;
-    state.moves = 0;
-    state.gameActive = true;
-    state.inputLocked = false;
-    state.selectionSize = selection;
-    state.gameKey = gameKey;
-    state.themeKey = themeKey;
-    state.elapsed = 0;
-    timerDisplay.textContent = '0:00';
-    movesDisplay.textContent = '0';
-    if (state.timerInterval) clearInterval(state.timerInterval);
-    state.startTime = null;
-
-    // UI umschalten
-    setupPanel.classList.add('hidden');
-    endGamePanel.classList.add('hidden');
-    renderBoard(rows, cols);
-    // Timer startet beim ersten Aufdecken
-
-    abortGameBtn.classList.remove('hidden');
-  }
-
-  function shuffleArray(arr) {
-    for (let i = arr.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [arr[i], arr[j]] = [arr[j], arr[i]];
-    }
-  }
-
-  function renderBoard(rows, cols) {
-    gameBoard.style.gridTemplateColumns = `repeat(${cols}, 1fr)`;
-    gameBoard.style.gridTemplateRows = `repeat(${rows}, 1fr)`;
-    gameBoard.innerHTML = '';
-
-    state.cards.forEach((card, idx) => {
-      const cardEl = document.createElement('div');
-      cardEl.className = 'card';
-      cardEl.dataset.index = idx;
-      cardEl.dataset.setIndex = card.setIndex;
-
-      const back = document.createElement('div');
-      back.className = 'card-back';
-      back.innerHTML = '<i class="bi bi-question-lg"></i>';
-
-      const front = document.createElement('div');
-      front.className = 'card-front';
-      const img = document.createElement('img');
-      img.src = card.imageSrc;
-      img.alt = 'Memory Bild';
-      img.loading = 'lazy';
-      front.appendChild(img);
-
-      cardEl.appendChild(back);
-      cardEl.appendChild(front);
-      cardEl.addEventListener('click', () => onCardClick(idx));
-      gameBoard.appendChild(cardEl);
-    });
-  }
-
-  function onCardClick(index) {
-    if (!state.gameActive || state.inputLocked) return;
-    const card = state.cards[index];
-    if (card.matched) return;
-    const cardEl = gameBoard.children[index];
-    if (cardEl.classList.contains('flipped')) return; // bereits aufgedeckt (sollte nicht passieren)
-
-    // Erster Klick? Timer starten
-    if (state.startTime === null) {
-      state.startTime = Date.now();
-      startTimer();
-    }
-
-    // Karte aufdecken
-    cardEl.classList.add('flipped');
-    state.firstSelection.push({ index, setIndex: card.setIndex, el: cardEl });
-
-    if (state.firstSelection.length === state.selectionSize) {
-      state.inputLocked = true;
-      state.moves++;
-      movesDisplay.textContent = state.moves;
-
-      const selection = state.firstSelection;
-      const firstSet = selection[0].setIndex;
-      const allSame = selection.every(s => s.setIndex === firstSet);
-
-      if (allSame) {
-        // Erfolg: alle Karten des Sets bleiben aufgedeckt (matched)
+      // Fehlschlag: nach 1 Sekunde zurückdrehen
+      setTimeout(() => {
         selection.forEach(s => {
-          const c = state.cards[s.index];
-          c.matched = true;
-          s.el.classList.add('matched');
+          s.el.classList.remove('flipped');
         });
-        state.matchedSets++;
         state.firstSelection = [];
         state.inputLocked = false;
+      }, 1000);
+    }
+  }
+}
 
-        // Spielende prüfen
-        if (state.matchedSets === state.totalSets) {
-          endGame();
-        }
-      } else {
-        // Fehlschlag: nach 1 Sekunde zurückdrehen
-        setTimeout(() => {
-          selection.forEach(s => {
-            s.el.classList.remove('flipped');
-          });
-          state.firstSelection = [];
-          state.inputLocked = false;
-        }, 1000);
-      }
+async function endGame() {
+  state.gameActive = false;
+  stopTimer();
+
+  // Zeit und Züge
+  const elapsed = state.elapsed;
+  const moves = state.moves;
+
+  // Default-Name aus letztem Ergebnis
+  const results = getResults();
+  const defaultName = results.length > 0 ? results[0].name : 'Memory';
+  playerNameInput.value = defaultName;
+
+  endGameStats.textContent = `Zeit: ${formatTime(elapsed)} · Züge: ${moves}`;
+  endGamePanel.classList.remove('hidden');
+
+  abortGameBtn.classList.add('hidden');
+
+  // Highscore prüfen und ggf. speichern (ohne Namen)
+  updateHighscoreIfNeeded(elapsed, moves, state.gameKey, state.themeKey);
+
+  // Ergebnisse aktualisieren (ohne Speichern-Button)
+  updateHighscoreDisplay();
+}
+
+function updateHighscoreIfNeeded(elapsed, moves, gameKey, themeKey) {
+  const key = `${gameKey}_${themeKey}`;
+  const hs = getHighscores();
+  const current = hs[key];
+  if (!current || elapsed < current.elapsed || (elapsed === current.elapsed && moves < current.moves)) {
+    hs[key] = { elapsed, moves };
+    saveHighscores(hs);
+  }
+}
+
+// Ergebnis speichern (Button)
+saveScoreBtn.addEventListener('click', () => {
+  const name = playerNameInput.value.trim() || 'Memory';
+  const elapsed = state.elapsed;
+  const moves = state.moves;
+  const game = state.gameKey;
+  const theme = state.themeKey;
+
+  const results = getResults();
+  results.unshift({ name, timestamp: Date.now(), elapsed, moves, game, theme });
+  saveResults(results);
+  renderResults();
+  updateHighscoreDisplay();
+
+  // Highscore erneut prüfen (falls Name eingegeben)
+  updateHighscoreIfNeeded(elapsed, moves, game, theme);
+  updateHighscoreDisplay();
+
+  endGamePanel.classList.add('hidden');
+  setupPanel.classList.remove('hidden');
+  gameBoard.innerHTML = '';
+  // Timer zurücksetzen
+  state.elapsed = 0;
+  timerDisplay.textContent = '0:00';
+  movesDisplay.textContent = '0';
+  state.gameActive = false;
+  if (state.timerInterval) clearInterval(state.timerInterval);
+  state.startTime = null;
+  abortGameBtn.classList.add('hidden');
+});
+
+// ==================== THEMA ERSTELLEN ====================
+const createModal = document.getElementById('createThemeModal');
+const themeNameInput = document.getElementById('themeNameInput');
+const themeFilesInput = document.getElementById('themeFilesInput');
+const uploadErrors = document.getElementById('uploadErrors');
+const saveThemeBtn = document.getElementById('saveThemeBtn');
+const closeModalBtn = document.getElementById('closeModalBtn');
+const openCreateThemeBtn = document.getElementById('openCreateThemeBtn');
+
+openCreateThemeBtn.addEventListener('click', () => {
+  themeNameInput.value = '';
+  themeFilesInput.value = '';
+  uploadErrors.textContent = '';
+  createModal.classList.remove('hidden');
+});
+
+closeModalBtn.addEventListener('click', () => {
+  createModal.classList.add('hidden');
+});
+
+saveThemeBtn.addEventListener('click', async () => {
+  uploadErrors.textContent = '';
+  const name = themeNameInput.value.trim();
+  if (!name || name.length < 1 || name.length > 20) {
+    uploadErrors.textContent = 'Name muss 1–20 Zeichen lang sein.';
+    return;
+  }
+
+  const customThemes = getCustomThemes();
+  // Eindeutigkeit prüfen (auch gegen Standardthemen)
+  if (THEMES[name] || Object.keys(customThemes).some(k => customThemes[k].label === name)) {
+    uploadErrors.textContent = 'Name bereits vergeben.';
+    return;
+  }
+
+  const files = Array.from(themeFilesInput.files);
+  if (files.length < 6 || files.length > 72) {
+    uploadErrors.textContent = 'Bitte 6–72 Bilder auswählen.';
+    return;
+  }
+
+  // Format prüfen (alle gleich)
+  const formats = new Set();
+  const validTypes = ['image/webp', 'image/png', 'image/jpeg'];
+  for (const file of files) {
+    if (!validTypes.includes(file.type)) {
+      uploadErrors.textContent = 'Nur webp, png oder jpg erlaubt.';
+      return;
+    }
+    formats.add(file.type);
+  }
+  if (formats.size > 1) {
+    uploadErrors.textContent = 'Alle Bilder müssen dasselbe Format haben.';
+    return;
+  }
+  const format = [...formats][0].split('/')[1]; // webp, png, jpeg
+
+  // Größe prüfen (< 50 KB pro Bild)
+  for (const file of files) {
+    if (file.size >= 50 * 1024) {
+      uploadErrors.textContent = `Bild "${file.name}" ist zu groß (≥ 50 KB).`;
+      return;
     }
   }
 
-  async function endGame() {
-    state.gameActive = false;
-    stopTimer();
-
-    // Zeit und Züge
-    const elapsed = state.elapsed;
-    const moves = state.moves;
-
-    // Default-Name aus letztem Ergebnis
-    const results = getResults();
-    const defaultName = results.length > 0 ? results[0].name : 'Memory';
-    playerNameInput.value = defaultName;
-
-    endGameStats.textContent = `Zeit: ${formatTime(elapsed)} · Züge: ${moves}`;
-    endGamePanel.classList.remove('hidden');
-
-    abortGameBtn.classList.add('hidden');
-
-    // Highscore prüfen und ggf. speichern (ohne Namen)
-    updateHighscoreIfNeeded(elapsed, moves, state.gameKey, state.themeKey);
-
-    // Ergebnisse aktualisieren (ohne Speichern-Button)
-    updateHighscoreDisplay();
+  // Bilder als dataURLs lesen
+  const imageDataArray = [];
+  try {
+    for (let i = 0; i < files.length; i++) {
+      const file = files[i];
+      const dataURL = await readFileAsDataURL(file);
+      imageDataArray.push({ name: String(i + 1), data: dataURL });
+    }
+  } catch (e) {
+    uploadErrors.textContent = 'Fehler beim Lesen der Bilder.';
+    return;
   }
 
-  function updateHighscoreIfNeeded(elapsed, moves, gameKey, themeKey) {
-    const key = `${gameKey}_${themeKey}`;
-    const hs = getHighscores();
-    const current = hs[key];
-    if (!current || elapsed < current.elapsed || (elapsed === current.elapsed && moves < current.moves)) {
-      hs[key] = { elapsed, moves };
-      saveHighscores(hs);
-    }
+  // Theme-Key generieren (eindeutig)
+  let themeKey = 'custom_' + Date.now() + '_' + Math.random().toString(36).substring(2, 8);
+  while (THEMES[themeKey] || customThemes[themeKey]) {
+    themeKey = 'custom_' + Date.now() + '_' + Math.random().toString(36).substring(2, 8);
   }
 
-  // Ergebnis speichern (Button)
-  saveScoreBtn.addEventListener('click', () => {
-    const name = playerNameInput.value.trim() || 'Memory';
-    const elapsed = state.elapsed;
-    const moves = state.moves;
-    const game = state.gameKey;
-    const theme = state.themeKey;
-
-    const results = getResults();
-    results.unshift({ name, timestamp: Date.now(), elapsed, moves, game, theme });
-    saveResults(results);
-    renderResults();
-    updateHighscoreDisplay();
-
-    // Highscore erneut prüfen (falls Name eingegeben)
-    updateHighscoreIfNeeded(elapsed, moves, game, theme);
-    updateHighscoreDisplay();
-
-    endGamePanel.classList.add('hidden');
-    setupPanel.classList.remove('hidden');
-    gameBoard.innerHTML = '';
-    // Timer zurücksetzen
-    state.elapsed = 0;
-    timerDisplay.textContent = '0:00';
-    movesDisplay.textContent = '0';
-    state.gameActive = false;
-    if (state.timerInterval) clearInterval(state.timerInterval);
-    state.startTime = null;
-    abortGameBtn.classList.add('hidden');
-  });
-
-  // ==================== THEMA ERSTELLEN ====================
-  const createModal = document.getElementById('createThemeModal');
-  const themeNameInput = document.getElementById('themeNameInput');
-  const themeFilesInput = document.getElementById('themeFilesInput');
-  const uploadErrors = document.getElementById('uploadErrors');
-  const saveThemeBtn = document.getElementById('saveThemeBtn');
-  const closeModalBtn = document.getElementById('closeModalBtn');
-  const openCreateThemeBtn = document.getElementById('openCreateThemeBtn');
-
-  openCreateThemeBtn.addEventListener('click', () => {
-    themeNameInput.value = '';
-    themeFilesInput.value = '';
-    uploadErrors.textContent = '';
-    createModal.classList.remove('hidden');
-  });
-
-  closeModalBtn.addEventListener('click', () => {
-    createModal.classList.add('hidden');
-  });
-
-  saveThemeBtn.addEventListener('click', async () => {
-    uploadErrors.textContent = '';
-    const name = themeNameInput.value.trim();
-    if (!name || name.length < 1 || name.length > 20) {
-      uploadErrors.textContent = 'Name muss 1–20 Zeichen lang sein.';
-      return;
-    }
-
-    const customThemes = getCustomThemes();
-    // Eindeutigkeit prüfen (auch gegen Standardthemen)
-    if (THEMES[name] || Object.keys(customThemes).some(k => customThemes[k].label === name)) {
-      uploadErrors.textContent = 'Name bereits vergeben.';
-      return;
-    }
-
-    const files = Array.from(themeFilesInput.files);
-    if (files.length < 6 || files.length > 72) {
-      uploadErrors.textContent = 'Bitte 6–72 Bilder auswählen.';
-      return;
-    }
-
-    // Format prüfen (alle gleich)
-    const formats = new Set();
-    const validTypes = ['image/webp', 'image/png', 'image/jpeg'];
-    for (const file of files) {
-      if (!validTypes.includes(file.type)) {
-        uploadErrors.textContent = 'Nur webp, png oder jpg erlaubt.';
-        return;
-      }
-      formats.add(file.type);
-    }
-    if (formats.size > 1) {
-      uploadErrors.textContent = 'Alle Bilder müssen dasselbe Format haben.';
-      return;
-    }
-    const format = [...formats][0].split('/')[1]; // webp, png, jpeg
-
-    // Größe prüfen (< 50 KB pro Bild)
-    for (const file of files) {
-      if (file.size >= 50 * 1024) {
-        uploadErrors.textContent = `Bild "${file.name}" ist zu groß (≥ 50 KB).`;
-        return;
-      }
-    }
-
-    // Bilder als dataURLs lesen
-    const imageDataArray = [];
-    try {
-      for (let i = 0; i < files.length; i++) {
-        const file = files[i];
-        const dataURL = await readFileAsDataURL(file);
-        imageDataArray.push({ name: String(i + 1), data: dataURL });
-      }
-    } catch (e) {
-      uploadErrors.textContent = 'Fehler beim Lesen der Bilder.';
-      return;
-    }
-
-    // Theme-Key generieren (eindeutig)
-    let themeKey = 'custom_' + Date.now() + '_' + Math.random().toString(36).substring(2, 8);
-    while (THEMES[themeKey] || customThemes[themeKey]) {
-      themeKey = 'custom_' + Date.now() + '_' + Math.random().toString(36).substring(2, 8);
-    }
-
-    // In IndexedDB speichern
-    try {
-      await storeThemeImages(themeKey, imageDataArray);
-    } catch (e) {
-      uploadErrors.textContent = 'Fehler beim Speichern der Bilder (IndexedDB).';
-      return;
-    }
-
-    // Metadaten in LocalStorage
-    customThemes[themeKey] = {
-      label: name,
-      custom: true,
-      images: files.length,
-      format: format,
-    };
-    saveCustomThemes(customThemes);
-
-    // UI aktualisieren
-    populateThemeSelect();
-    // Neues Theme auswählen
-    themeSelect.value = themeKey;
-    state.themeKey = themeKey;
-    validateThemeAndGame();
-    updateHighscoreDisplay();
-
-    createModal.classList.add('hidden');
-  });
-
-  function readFileAsDataURL(file) {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onload = () => resolve(reader.result);
-      reader.onerror = () => reject(reader.error);
-      reader.readAsDataURL(file);
-    });
+  // In IndexedDB speichern
+  try {
+    await storeThemeImages(themeKey, imageDataArray);
+  } catch (e) {
+    uploadErrors.textContent = 'Fehler beim Speichern der Bilder (IndexedDB).';
+    return;
   }
 
-  // ==================== THEMA LÖSCHEN ====================
-  deleteThemeBtn.addEventListener('click', async () => {
-    const themeKey = themeSelect.value;
-    const customThemes = getCustomThemes();
-    if (!customThemes[themeKey]) {
-      alert('Nur Custom-Themes können gelöscht werden.');
-      return;
-    }
-    if (!confirm(`Thema "${customThemes[themeKey].label}" wirklich löschen?`)) return;
+  // Metadaten in LocalStorage
+  customThemes[themeKey] = {
+    label: name,
+    custom: true,
+    images: files.length,
+    format: format,
+  };
+  saveCustomThemes(customThemes);
 
-    // Aus IndexedDB löschen
-    try {
-      await deleteThemeImages(themeKey);
-    } catch (e) {
-      alert('Fehler beim Löschen der Bilder: ' + e.message);
-      return;
-    }
-    // Aus LocalStorage entfernen
-    delete customThemes[themeKey];
-    saveCustomThemes(customThemes);
+  // UI aktualisieren
+  populateThemeSelect();
+  // Neues Theme auswählen
+  themeSelect.value = themeKey;
+  state.themeKey = themeKey;
+  validateThemeAndGame();
+  updateHighscoreDisplay();
+  renderThemePreview(); // NEU
 
-    // Falls aktuell ausgewählt, Standard-Theme wählen
-    if (state.themeKey === themeKey) {
-      state.themeKey = Object.keys(THEMES)[0] || '';
-    }
-    populateThemeSelect();
-    updateHighscoreDisplay();
-    renderResults(); // Highscores für gelöschtes Theme könnten noch existieren, aber Anzeige aktualisieren
+
+  createModal.classList.add('hidden');
+});
+
+function readFileAsDataURL(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result);
+    reader.onerror = () => reject(reader.error);
+    reader.readAsDataURL(file);
   });
+}
 
-  // ==================== EVENT LISTENER ====================
-  gameSelect.addEventListener('change', () => {
-    state.gameKey = gameSelect.value;
-    validateThemeAndGame();
-    updateHighscoreDisplay();
-  });
-
-  themeSelect.addEventListener('change', () => {
-    state.themeKey = themeSelect.value;
-    validateThemeAndGame();
-    updateHighscoreDisplay();
-  });
-
-  startBtn.addEventListener('click', () => {
-    startGame();
-  });
-
-  // ==================== INIT ====================
-  async function init() {
-    try {
-      await initDB();
-    } catch (e) {
-      alert('IndexedDB konnte nicht geöffnet werden. Custom-Themes sind nicht verfügbar.');
-    }
-    populateGameSelect();
-    populateThemeSelect();
-    renderResults();
-    updateHighscoreDisplay();
-
-    // Default gameKey / themeKey setzen
-    state.gameKey = gameSelect.value;
-    state.themeKey = themeSelect.value;
+// ==================== THEMA LÖSCHEN ====================
+deleteThemeBtn.addEventListener('click', async () => {
+  const themeKey = themeSelect.value;
+  const customThemes = getCustomThemes();
+  if (!customThemes[themeKey]) {
+    alert('Nur Custom-Themes können gelöscht werden.');
+    return;
   }
+  if (!confirm(`Thema "${customThemes[themeKey].label}" wirklich löschen?`)) return;
 
-  init();
+  // Aus IndexedDB löschen
+  try {
+    await deleteThemeImages(themeKey);
+  } catch (e) {
+    alert('Fehler beim Löschen der Bilder: ' + e.message);
+    return;
+  }
+  // Aus LocalStorage entfernen
+  delete customThemes[themeKey];
+  saveCustomThemes(customThemes);
+
+  // Falls aktuell ausgewählt, Standard-Theme wählen
+  if (state.themeKey === themeKey) {
+    state.themeKey = Object.keys(THEMES)[0] || '';
+  }
+  populateThemeSelect();
+  updateHighscoreDisplay();
+  renderResults(); // Highscores für gelöschtes Theme könnten noch existieren, aber Anzeige aktualisieren
+  renderThemePreview(); // NEU
+});
+
+// ==================== EVENT LISTENER ====================
+gameSelect.addEventListener('change', () => {
+  state.gameKey = gameSelect.value;
+  validateThemeAndGame();
+  updateHighscoreDisplay();
+});
+
+themeSelect.addEventListener('change', () => {
+  state.themeKey = themeSelect.value;
+  validateThemeAndGame();
+  updateHighscoreDisplay();
+  renderThemePreview();
+});
+
+startBtn.addEventListener('click', () => {
+  startGame();
+});
+
+// ==================== INIT ====================
+async function init() {
+  try {
+    await initDB();
+  } catch (e) {
+    alert('IndexedDB konnte nicht geöffnet werden. Custom-Themes sind nicht verfügbar.');
+  }
+  populateGameSelect();
+  populateThemeSelect();
+  renderResults();
+  updateHighscoreDisplay();
+
+  // Default gameKey / themeKey setzen
+  state.gameKey = gameSelect.value;
+  state.themeKey = themeSelect.value;
+  renderThemePreview();
+}
+
+init();
 
   // ==================== SPIEL ABBRECHEN ====================
 function abortGame() {

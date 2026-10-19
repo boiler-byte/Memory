@@ -1,0 +1,11 @@
+﻿license: Freeware, Non-Commercial
+link: https://www.fontspace.com/neon-night-font-f123324
+
+license: Demo
+link: https://www.fontspace.com/noble-elegant-font-f142206
+
+license: Creative Commons (by-nc-nd) Attribution Non-commercial No Derivatives 
+link: https://www.fontspace.com/valeska-font-f113680
+
+license: Freeware, Non-Commercial
+link: https://www.fontspace.com/retro-fancy-font-f125030
