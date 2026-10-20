@@ -797,7 +797,7 @@ const THEMES = {
   looneytunes: { label: "Looney Tunes", custom: false, images: 29, format: 'jpg' },
   marvelheroes: { label: "Marvel Heroes", custom: false, images: 15, format: 'webp' },
   simpsons: { label: "Simpsons", custom: false, images: 29, format: 'webp' },
-  tokioparkplatz: { label: "Tokio Parkplatz", custom: false, images: 65, format: 'webp' },
+  tokioparkplatz: { label: "Tokio Parkplatz", custom: false, images: 60, format: 'webp' },
 };
 
 // Custom-Themes werden aus LocalStorage geladen (Key: themeKey)
@@ -1160,14 +1160,18 @@ async function startGame() {
   // Theme-Info besorgen
   let themeInfo = null;
   let imageDataArray = []; // Array von dataURLs (bei custom) oder URLs
+  const numSets = ( game.cards ?? (cols * rows) ) / selection;
+
   if (THEMES[themeKey]) {
     themeInfo = THEMES[themeKey];
     const format = themeInfo.format;
-    // Standard-Theme: Bilder liegen unter ./img/{themeKey}/1.{format}, ...
-    const numSets = ( game.cards ?? (cols * rows) ) / selection;
-    for (let i = 1; i <= numSets; i++) {
-      imageDataArray.push(`./img/${themeKey}/${i}.${format}`);
+    // Alle verfügbaren Bildpfade aufbauen: ./img/{themeKey}/1.{format} ... N.{format}
+    const allImages = [];
+    for (let i = 1; i <= themeInfo.images; i++) {
+      allImages.push(`./img/${themeKey}/${i}.${format}`);
     }
+    // Zufällig genau numSets Bilder auswählen
+    imageDataArray = pickRandom(allImages, numSets);
   } else {
     const custom = getCustomThemes();
     themeInfo = custom[themeKey];
@@ -1175,19 +1179,17 @@ async function startGame() {
       alert('Thema nicht gefunden!');
       return;
     }
-    const numSets = ( game.cards ?? (cols * rows) ) / selection;
     const stored = await getThemeImages(themeKey); // [{name, data}]
     if (!stored || stored.length < numSets) {
       alert('Nicht genügend Bilder im Custom-Thema gespeichert.');
       return;
     }
-    // Wir nehmen die ersten numSets Bilder (dataURLs)
-    imageDataArray = stored.slice(0, numSets).map(item => item.data);
+    // Zufällig genau numSets Bilder aus den gespeicherten dataURLs auswählen
+    const picked = pickRandom(stored, numSets);
+    imageDataArray = picked.map(item => item.data);
   }
 
   // Karten erstellen: Jedes Set kommt selection-mal vor
-  const totalCards = game.cards ?? ( cols * rows );
-  const numSets = totalCards / selection;
   let cards = [];
   for (let setIdx = 0; setIdx < numSets; setIdx++) {
     const imgSrc = imageDataArray[setIdx];
@@ -1234,6 +1236,12 @@ function shuffleArray(arr) {
     const j = Math.floor(Math.random() * (i + 1));
     [arr[i], arr[j]] = [arr[j], arr[i]];
   }
+}
+// Wählt zufällig n Elemente aus einem Array (ohne Zurücklegen)
+function pickRandom(arr, n) {
+  const copy = [...arr];
+  shuffleArray(copy);
+  return copy.slice(0, n);
 }
 
 function renderBoard(rows, cols, maxWidth) {
