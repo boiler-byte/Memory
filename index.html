@@ -301,6 +301,9 @@ button:disabled {
   width: 100%;
   border: 1px solid #3a4d5e;
   box-shadow: 0 25px 40px black;
+  max-height: 92vh;
+  overflow-y: auto;
+  position: relative;
 }
 .modal-content h3 {
   margin-bottom: 1rem;
@@ -313,6 +316,7 @@ button:disabled {
   display: flex;
   gap: 1rem;
   justify-content: flex-end;
+  flex-wrap: wrap;
 }
 .close-btn {
   background: transparent;
@@ -322,6 +326,7 @@ button:disabled {
   color: #f87171;
   font-size: 0.8rem;
   margin-top: 0.6rem;
+  min-height: 1.1rem;
 }
 .hidden {
   display: none !important;
@@ -426,8 +431,78 @@ display: none !important;
   padding: 0.3rem 0;
 }
 
-
-
+/* ---------- NEU: Erstell-/Bearbeiten-Dialog ---------- */
+.theme-editor-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(64px, 1fr));
+  gap: 0.5rem;
+  margin-top: 0.6rem;
+  max-height: 280px;
+  overflow-y: auto;
+  padding: 0.3rem;
+  background: #10151d;
+  border: 1px solid #2d3748;
+  border-radius: 1rem;
+  min-height: 80px;
+}
+.theme-editor-item {
+  aspect-ratio: 1 / 1;
+  border-radius: 0.6rem;
+  overflow: hidden;
+  background: #1e2632;
+  border: 1px solid #2d3748;
+  position: relative;
+  cursor: pointer;
+  transition: transform 0.15s, border-color 0.15s;
+}
+.theme-editor-item:hover {
+  transform: scale(1.05);
+  border-color: #f87171;
+}
+.theme-editor-item:hover::after {
+  content: '\F62A'; /* Bootstrap icon: trash */
+  font-family: 'bootstrap-icons';
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(120, 20, 30, 0.7);
+  color: #fff;
+  font-size: 1.4rem;
+}
+.theme-editor-item img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+.theme-editor-empty {
+  grid-column: 1 / -1;
+  color: #64748b;
+  font-size: 0.85rem;
+  font-style: italic;
+  padding: 0.6rem;
+  text-align: center;
+}
+.theme-editor-toolbar {
+  display: flex;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+  margin-top: 0.6rem;
+}
+.theme-editor-toolbar button {
+  padding: 0.6rem 1.1rem;
+  font-size: 0.9rem;
+}
+.theme-editor-toolbar .paste-btn {
+  background: #2e4a5c;
+}
+.theme-editor-count {
+  font-size: 0.8rem;
+  color: #9aa8b9;
+  margin-top: 0.4rem;
+}
 
 /* UI-Designs: unabhängig von den Kartenmotiv-Themen */
 :root {
@@ -483,6 +558,9 @@ body:not([data-ui-theme="default"]) .theme-preview { background:var(--ui-control
 body:not([data-ui-theme="default"]) .theme-preview-title { color:var(--ui-muted); }
 body:not([data-ui-theme="default"]) .theme-preview-item { background:var(--ui-card-back); border-color:var(--ui-card-border); }
 body:not([data-ui-theme="default"]) .theme-preview-more { background:var(--ui-card-back); border-color:var(--ui-card-border); color:var(--ui-muted); }
+body:not([data-ui-theme="default"]) .theme-editor-grid { background:var(--ui-control); border-color:var(--ui-border); }
+body:not([data-ui-theme="default"]) .theme-editor-item { background:var(--ui-card-back); border-color:var(--ui-card-border); }
+body:not([data-ui-theme="default"]) .theme-editor-count { color:var(--ui-muted); }
 
 body:not([data-ui-theme="default"]) { background:var(--ui-bg); color:var(--ui-text); transition:background .25s,color .25s; }
 body[data-ui-theme="glassmorphism"] {
@@ -643,12 +721,84 @@ body[data-ui-theme="minimal"] {
     letter-spacing: 0.1rem;
   }
   .theme-preview-grid { grid-template-columns: repeat(auto-fill, minmax(52px, 1fr)); }
+  .theme-editor-grid { grid-template-columns: repeat(auto-fill, minmax(52px, 1fr)); }
   .small-hidden { display:none !important; }
   .small-show { display:flex !important; }
   body[data-ui-theme="glassmorphism"] {
     h1 { font-size: 4rem; }
     h3 { font-size: 1.6rem; }
   }
+}
+
+/* ---------- NEU: Drag & Drop Zonen ---------- */
+.drop-zone {
+  position: fixed;
+  inset: 0;
+  background: rgba(11, 14, 20, 0.85);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.18s ease;
+}
+.drop-zone.active {
+  opacity: 1;
+}
+.drop-zone-inner {
+  border: 3px dashed var(--ui-accent, #5f9ea0);
+  border-radius: 2rem;
+  padding: 3rem 4rem;
+  background: var(--ui-panel, #151b24);
+  color: var(--ui-text, #eef2f5);
+  text-align: center;
+  max-width: 90vw;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6);
+  animation: dropPulse 1.4s ease-in-out infinite;
+}
+.drop-zone-inner i {
+  font-size: 3.5rem;
+  color: var(--ui-accent, #5f9ea0);
+  display: block;
+  margin-bottom: 1rem;
+}
+.drop-zone-inner h3 {
+  font-family: inherit !important;
+  font-size: 1.6rem !important;
+  letter-spacing: 0.05rem !important;
+  padding: 0 !important;
+  margin: 0 0 0.5rem 0 !important;
+  text-shadow: none !important;
+}
+.drop-zone-inner p {
+  color: var(--ui-muted, #9aa8b9);
+  font-size: 0.95rem;
+  margin: 0;
+}
+@keyframes dropPulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.03); }
+}
+
+/* Drop-Zone im Modal (kleiner, innerhalb des Dialogs) */
+.modal-drop-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(11, 14, 20, 0.85);
+  border-radius: 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.18s ease;
+}
+.modal-drop-overlay.active {
+  opacity: 1;
 }
 </style>
 </head>
@@ -688,7 +838,7 @@ body[data-ui-theme="minimal"] {
         <label for="themeSelect">Thema</label>
         <div class="theme-select-wrapper">
           <select id="themeSelect"></select>
-          <button class="delete-theme-btn" id="deleteThemeBtn" title="Custom-Thema löschen"><i class="bi bi-trash3"></i></button>
+          <button class="delete-theme-btn" id="editThemeBtn" title="Thema bearbeiten"><i class="bi bi-pencil-square"></i></button>
         </div>
       </div>
     </div>
@@ -730,23 +880,50 @@ body[data-ui-theme="minimal"] {
   
 </div>
 
-<!-- Modal: Thema erstellen -->
+<!-- Modal: Thema erstellen / bearbeiten -->
 <div id="createThemeModal" class="modal-overlay hidden">
   <div class="modal-content">
-    <h3><i class="bi bi-images"></i> Neues Thema erstellen</h3>
+    <h3><i class="bi bi-images"></i> <span id="themeModalTitle">Neues Thema erstellen</span></h3>
     <div class="field-group">
       <label for="themeNameInput">Themenname (1–20 Zeichen)</label>
       <input type="text" id="themeNameInput" maxlength="20" placeholder="z.B. Meine Bilder">
     </div>
     <div class="field-group">
-      <label for="themeFilesInput">Bilder (6–72, webp/png/jpg, < 50 KB pro Bild)</label>
-      <input type="file" id="themeFilesInput" accept="image/webp,image/png,image/jpeg" multiple>
+      <label>Bilder (1–72, webp/png/jpg)</label>
+      <div class="theme-editor-grid" id="themeEditorGrid"></div>
+      <div class="theme-editor-count" id="themeEditorCount"></div>
+      <div class="theme-editor-toolbar">
+        <button type="button" id="addImagesBtn"><i class="bi bi-plus-lg"></i> Bilder</button>
+        <button type="button" class="paste-btn" id="pasteImagesBtn"><i class="bi bi-clipboard"></i> Einfügen</button>
+        <input type="file" id="themeFilesInput" accept="image/webp,image/png,image/jpeg" multiple class="hidden">
+      </div>
     </div>
     <div class="upload-errors" id="uploadErrors"></div>
     <div class="modal-actions">
+      <button id="deleteThemeBtn" class="abort-btn" title="Thema löschen" style="display:none;">
+        <i class="bi bi-trash3"></i>
+      </button>
       <button class="close-btn" id="closeModalBtn">Abbrechen</button>
-      <button id="saveThemeBtn"><i class="bi bi-check-lg"></i> Thema speichern</button>
+      <button id="saveThemeBtn">Speichern</button>
     </div>
+
+    <!-- NEU: Drop-Overlay im Modal -->
+    <div id="modalDropOverlay" class="modal-drop-overlay">
+      <div class="drop-zone-inner">
+        <i class="bi bi-cloud-arrow-up"></i>
+        <h3>Bilder hinzufügen</h3>
+        <p>Dateien hier ablegen</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- NEU: Globale Drop-Zone für Setup-Panel -->
+<div id="setupDropZone" class="drop-zone">
+  <div class="drop-zone-inner">
+    <i class="bi bi-cloud-arrow-up"></i>
+    <h3 id="setupDropTitle">Bilder hinzufügen</h3>
+    <p id="setupDropHint">Dateien hier ablegen</p>
   </div>
 </div>
 
@@ -810,7 +987,7 @@ const DB_STORE = 'themeImages';
 // ==================== STATE ====================
 let state = {
   gameKey: 'easy',
-  themeKey: 'flowers',
+  themeKey: 'hannabarbera',
   // Spielfeld
   cards: [],           // { id, setIndex, imageKey, matched }
   firstSelection: [],  // aufgedeckte Karten (max selection)
@@ -919,7 +1096,6 @@ function saveHighscores(hs) {
 const gameSelect = document.getElementById('gameSelect');
 const themeSelect = document.getElementById('themeSelect');
 const startBtn = document.getElementById('startGameBtn');
-const deleteThemeBtn = document.getElementById('deleteThemeBtn');
 const themeWarning = document.getElementById('themeWarning');
 const gameBoard = document.getElementById('gameBoard');
 const timerDisplay = document.getElementById('timerDisplay');
@@ -972,7 +1148,7 @@ function populateThemeSelect() {
     themeSelect.value = state.themeKey;
   }
   validateThemeAndGame();
-  renderThemePreview(); // NEU
+  // renderThemePreview(); // NEU
 }
 
 // ==================== RESPONSIVE GRID ====================
@@ -1395,7 +1571,7 @@ saveScoreBtn.addEventListener('click', () => {
   abortGameBtn.classList.add('hidden');
 });
 
-// ==================== THEMA ERSTELLEN ====================
+// ==================== THEMA ERSTELLEN / BEARBEITEN ====================
 const createModal = document.getElementById('createThemeModal');
 const themeNameInput = document.getElementById('themeNameInput');
 const themeFilesInput = document.getElementById('themeFilesInput');
@@ -1403,18 +1579,235 @@ const uploadErrors = document.getElementById('uploadErrors');
 const saveThemeBtn = document.getElementById('saveThemeBtn');
 const closeModalBtn = document.getElementById('closeModalBtn');
 const openCreateThemeBtn = document.getElementById('openCreateThemeBtn');
+const editThemeBtn = document.getElementById('editThemeBtn');
+const deleteThemeBtnInModal = document.getElementById('deleteThemeBtn');
+const themeModalTitle = document.getElementById('themeModalTitle');
+const themeEditorGrid = document.getElementById('themeEditorGrid');
+const themeEditorCount = document.getElementById('themeEditorCount');
+const addImagesBtn = document.getElementById('addImagesBtn');
+const pasteImagesBtn = document.getElementById('pasteImagesBtn');
 
+// Editor-State
+let editorState = {
+  mode: 'create',        // 'create' | 'edit'
+  editThemeKey: null,    // bei edit: der Key des zu bearbeitenden Themes
+  images: [],            // [{ name, data (dataURL), isNew }]
+  existingImages: [],    // Originalbilder (nur bei edit), um nicht-benötigte nicht zu löschen
+};
+
+const MAX_IMAGES = 72;
+const THUMB_MAX_WIDTH = 250;
+
+// ---------- Öffnen: Neues Thema ----------
 openCreateThemeBtn.addEventListener('click', () => {
-  themeNameInput.value = '';
-  themeFilesInput.value = '';
+  openEditor('create');
+});
+
+// ---------- Öffnen: Bearbeiten ----------
+editThemeBtn.addEventListener('click', async () => {
+  const themeKey = themeSelect.value;
+  const customThemes = getCustomThemes();
+  if (!customThemes[themeKey]) {
+    alert('Nur Custom-Themes können bearbeitet werden.');
+    return;
+  }
+  openEditor('edit', themeKey);
+});
+
+async function openEditor(mode, themeKey = null) {
   uploadErrors.textContent = '';
+  editorState.mode = mode;
+  editorState.editThemeKey = themeKey;
+  editorState.images = [];
+  editorState.existingImages = [];
+
+  if (mode === 'create') {
+    themeModalTitle.textContent = 'Neues Thema erstellen';
+    themeNameInput.value = '';
+    deleteThemeBtnInModal.style.display = 'none';
+  } else {
+    const customThemes = getCustomThemes();
+    const meta = customThemes[themeKey];
+    if (!meta) { alert('Thema nicht gefunden.'); return; }
+    themeModalTitle.textContent = 'Thema bearbeiten';
+    themeNameInput.value = meta.label;
+    deleteThemeBtnInModal.style.display = 'inline-flex';
+
+    // Vorhandene Bilder laden
+    let stored = [];
+    try { stored = await getThemeImages(themeKey); } catch (_) {}
+    editorState.existingImages = stored.map(item => ({ name: item.name, data: item.data }));
+    editorState.images = stored.map(item => ({
+      name: item.name,
+      data: item.data,
+      isNew: false,
+    }));
+  }
+
+  renderEditorGrid();
   createModal.classList.remove('hidden');
-});
+}
 
-closeModalBtn.addEventListener('click', () => {
+// ---------- Schließen ----------
+function closeEditor() {
   createModal.classList.add('hidden');
+  editorState.images = [];
+  editorState.existingImages = [];
+  editorState.editThemeKey = null;
+}
+closeModalBtn.addEventListener('click', closeEditor);
+
+// ---------- Hinzufügen über Button ----------
+addImagesBtn.addEventListener('click', () => themeFilesInput.click());
+
+themeFilesInput.addEventListener('change', async () => {
+  const files = Array.from(themeFilesInput.files);
+  themeFilesInput.value = ''; // zurücksetzen, damit gleiche Datei erneut wählbar
+  await addImagesFromFiles(files);
 });
 
+// ---------- Hinzufügen über Zwischenablage-Button ----------
+pasteImagesBtn.addEventListener('click', async () => {
+  try {
+    const items = await navigator.clipboard.read();
+    const files = [];
+    for (const item of items) {
+      for (const type of item.types) {
+        if (type.startsWith('image/')) {
+          const blob = await item.getType(type);
+          const ext = type.split('/')[1] || 'png';
+          files.push(new File([blob], `clipboard.${ext}`, { type: blob.type }));
+        }
+      }
+    }
+    if (files.length === 0) {
+      uploadErrors.textContent = 'Keine Bilder in der Zwischenablage gefunden.';
+      return;
+    }
+    await addImagesFromFiles(files);
+  } catch (err) {
+    uploadErrors.textContent = 'Zwischenablage konnte nicht gelesen werden (Berechtigung?).';
+  }
+});
+
+// ---------- Globale Strg+V / Cmd+V-Unterstützung ----------
+document.addEventListener('paste', async (e) => {
+  if (createModal.classList.contains('hidden')) return;
+  const items = Array.from(e.clipboardData?.items || []);
+  const files = [];
+  for (const item of items) {
+    if (item.kind === 'file' && item.type.startsWith('image/')) {
+      const file = item.getAsFile();
+      if (file) files.push(file);
+    }
+  }
+  if (files.length > 0) {
+    e.preventDefault();
+    await addImagesFromFiles(files);
+  }
+});
+
+// ---------- Validierung + Umwandlung ----------
+const VALID_TYPES = ['image/webp', 'image/png', 'image/jpeg'];
+
+async function addImagesFromFiles(files) {
+  uploadErrors.textContent = '';
+  if (!files || files.length === 0) return;
+
+  // Kapazitätsprüfung
+  if (editorState.images.length + files.length > MAX_IMAGES) {
+    uploadErrors.textContent = `Maximal ${MAX_IMAGES} Bilder pro Thema.`;
+    return;
+  }
+
+  // Formatvalidierung
+  for (const file of files) {
+    if (!VALID_TYPES.includes(file.type)) {
+      uploadErrors.textContent = `Ungültiges Format: ${file.name}. Nur webp, png, jpg.`;
+      return;
+    }
+  }
+
+  // Verarbeitung: alle nacheinander (Reihenfolge wichtig für Konsistenz)
+  for (const file of files) {
+    try {
+      const dataURL = await readFileAsDataURL(file);
+      const processed = await makeThumbDataURL(dataURL);
+      editorState.images.push({
+        name: String(editorState.images.length + 1),
+        data: processed,
+        isNew: true,
+      });
+    } catch (err) {
+      uploadErrors.textContent = `Fehler beim Verarbeiten von ${file.name}: ${err.message}`;
+      return;
+    }
+  }
+
+  renderEditorGrid();
+}
+
+// Wandelt ein Bild in ein webp-Thumb mit max. 250px Breite um.
+// Ist die Breite <= 250, wird das Original zurückgegeben.
+function makeThumbDataURL(dataURL) {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => {
+      if (img.naturalWidth <= THUMB_MAX_WIDTH) {
+        // bereits klein genug -> Originaldaten unverändert
+        resolve(dataURL);
+        return;
+      }
+      const scale = THUMB_MAX_WIDTH / img.naturalWidth;
+      const w = THUMB_MAX_WIDTH;
+      const h = Math.max(1, Math.round(img.naturalHeight * scale));
+      const canvas = document.createElement('canvas');
+      canvas.width = w;
+      canvas.height = h;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(img, 0, 0, w, h);
+      try {
+        const out = canvas.toDataURL('image/webp', 0.85);
+        // Fallback falls Browser kein webp liefert
+        if (!out.startsWith('data:image/webp')) {
+          resolve(dataURL);
+        } else {
+          resolve(out);
+        }
+      } catch (_) {
+        resolve(dataURL);
+      }
+    };
+    img.onerror = () => reject(new Error('Bild konnte nicht geladen werden'));
+    img.src = dataURL;
+  });
+}
+
+// ---------- Editor-Vorschau ----------
+function renderEditorGrid() {
+  themeEditorGrid.innerHTML = '';
+  if (editorState.images.length === 0) {
+    themeEditorGrid.innerHTML = '<div class="theme-editor-empty">Noch keine Bilder hinzugefügt.</div>';
+  } else {
+    editorState.images.forEach((img, idx) => {
+      const item = document.createElement('div');
+      item.className = 'theme-editor-item';
+      item.title = 'Klicken zum Löschen';
+      const im = document.createElement('img');
+      im.src = img.data;
+      im.alt = `Bild ${idx + 1}`;
+      item.appendChild(im);
+      item.addEventListener('click', () => {
+        editorState.images.splice(idx, 1);
+        renderEditorGrid();
+      });
+      themeEditorGrid.appendChild(item);
+    });
+  }
+  themeEditorCount.textContent = `${editorState.images.length} / ${MAX_IMAGES} Bilder`;
+}
+
+// ---------- Speichern ----------
 saveThemeBtn.addEventListener('click', async () => {
   uploadErrors.textContent = '';
   const name = themeNameInput.value.trim();
@@ -1423,63 +1816,47 @@ saveThemeBtn.addEventListener('click', async () => {
     return;
   }
 
+  if (editorState.images.length < 1) {
+    uploadErrors.textContent = 'Mindestens 1 Bild erforderlich.';
+    return;
+  }
+  if (editorState.images.length > MAX_IMAGES) {
+    uploadErrors.textContent = `Maximal ${MAX_IMAGES} Bilder erlaubt.`;
+    return;
+  }
+
   const customThemes = getCustomThemes();
-  // Eindeutigkeit prüfen (auch gegen Standardthemen)
-  if (THEMES[name] || Object.keys(customThemes).some(k => customThemes[k].label === name)) {
+
+  // Namen-Eindeutigkeit prüfen (außer bei sich selbst im Edit-Modus)
+  const isDuplicate = (key, meta) =>
+    meta.label === name && !(editorState.mode === 'edit' && key === editorState.editThemeKey);
+
+  if (THEMES[name] || Object.entries(customThemes).some(([k, v]) => isDuplicate(k, v))) {
     uploadErrors.textContent = 'Name bereits vergeben.';
     return;
   }
 
-  const files = Array.from(themeFilesInput.files);
-  if (files.length < 6 || files.length > 72) {
-    uploadErrors.textContent = 'Bitte 6–72 Bilder auswählen.';
-    return;
-  }
+  // Format bestimmen (alle neuen Bilder sollen webp sein; bestehende ggf. gemischt)
+  // Wir nehmen das Format des ersten Bildes, aber da wir webp-thumbs erzeugen,
+  // speichern wir webp als Format-Metadatum.
+  // Bestehende Bilder (isNew === false) können andere Formate haben – das ist ok,
+  // da sie als dataURL gespeichert sind. Für die Anzeige irrelevant.
+  const format = 'webp';
 
-  // Format prüfen (alle gleich)
-  const formats = new Set();
-  const validTypes = ['image/webp', 'image/png', 'image/jpeg'];
-  for (const file of files) {
-    if (!validTypes.includes(file.type)) {
-      uploadErrors.textContent = 'Nur webp, png oder jpg erlaubt.';
-      return;
-    }
-    formats.add(file.type);
-  }
-  if (formats.size > 1) {
-    uploadErrors.textContent = 'Alle Bilder müssen dasselbe Format haben.';
-    return;
-  }
-  const format = [...formats][0].split('/')[1]; // webp, png, jpeg
-
-  // Größe prüfen (< 50 KB pro Bild)
-  for (const file of files) {
-    if (file.size >= 50 * 1024) {
-      uploadErrors.textContent = `Bild "${file.name}" ist zu groß (≥ 50 KB).`;
-      return;
-    }
-  }
-
-  // Bilder als dataURLs lesen
-  const imageDataArray = [];
-  try {
-    for (let i = 0; i < files.length; i++) {
-      const file = files[i];
-      const dataURL = await readFileAsDataURL(file);
-      imageDataArray.push({ name: String(i + 1), data: dataURL });
-    }
-  } catch (e) {
-    uploadErrors.textContent = 'Fehler beim Lesen der Bilder.';
-    return;
-  }
-
-  // Theme-Key generieren (eindeutig)
-  let themeKey = 'custom_' + Date.now() + '_' + Math.random().toString(36).substring(2, 8);
-  while (THEMES[themeKey] || customThemes[themeKey]) {
+  let themeKey = editorState.editThemeKey;
+  if (editorState.mode === 'create') {
     themeKey = 'custom_' + Date.now() + '_' + Math.random().toString(36).substring(2, 8);
+    while (THEMES[themeKey] || customThemes[themeKey]) {
+      themeKey = 'custom_' + Date.now() + '_' + Math.random().toString(36).substring(2, 8);
+    }
   }
 
-  // In IndexedDB speichern
+  // Bilder serialisieren (Reihenfolge beibehalten, Namen neu nummerieren)
+  const imageDataArray = editorState.images.map((img, i) => ({
+    name: String(i + 1),
+    data: img.data,
+  }));
+
   try {
     await storeThemeImages(themeKey, imageDataArray);
   } catch (e) {
@@ -1487,26 +1864,23 @@ saveThemeBtn.addEventListener('click', async () => {
     return;
   }
 
-  // Metadaten in LocalStorage
   customThemes[themeKey] = {
     label: name,
     custom: true,
-    images: files.length,
+    images: imageDataArray.length,
     format: format,
   };
   saveCustomThemes(customThemes);
 
   // UI aktualisieren
   populateThemeSelect();
-  // Neues Theme auswählen
   themeSelect.value = themeKey;
   state.themeKey = themeKey;
   validateThemeAndGame();
   updateHighscoreDisplay();
-  renderThemePreview(); // NEU
+  renderThemePreview();
 
-
-  createModal.classList.add('hidden');
+  closeEditor();
 });
 
 function readFileAsDataURL(file) {
@@ -1518,35 +1892,34 @@ function readFileAsDataURL(file) {
   });
 }
 
-// ==================== THEMA LÖSCHEN ====================
-deleteThemeBtn.addEventListener('click', async () => {
-  const themeKey = themeSelect.value;
+// ==================== THEMA LÖSCHEN (im Modal) ====================
+deleteThemeBtnInModal.addEventListener('click', async () => {
+  if (editorState.mode !== 'edit' || !editorState.editThemeKey) return;
+  const themeKey = editorState.editThemeKey;
   const customThemes = getCustomThemes();
   if (!customThemes[themeKey]) {
-    alert('Nur Custom-Themes können gelöscht werden.');
+    alert('Thema nicht gefunden.');
     return;
   }
   if (!confirm(`Thema "${customThemes[themeKey].label}" wirklich löschen?`)) return;
 
-  // Aus IndexedDB löschen
   try {
     await deleteThemeImages(themeKey);
   } catch (e) {
     alert('Fehler beim Löschen der Bilder: ' + e.message);
     return;
   }
-  // Aus LocalStorage entfernen
   delete customThemes[themeKey];
   saveCustomThemes(customThemes);
 
-  // Falls aktuell ausgewählt, Standard-Theme wählen
   if (state.themeKey === themeKey) {
     state.themeKey = Object.keys(THEMES)[0] || '';
   }
   populateThemeSelect();
   updateHighscoreDisplay();
-  renderResults(); // Highscores für gelöschtes Theme könnten noch existieren, aber Anzeige aktualisieren
-  renderThemePreview(); // NEU
+  renderResults();
+  renderThemePreview();
+  closeEditor();
 });
 
 // ==================== EVENT LISTENER ====================
@@ -1655,6 +2028,138 @@ window.addEventListener('resize', () => {
   gameBoard.style.gridTemplateColumns = `repeat(${cols}, 1fr)`;
   gameBoard.style.gridTemplateRows = `repeat(${rows}, 1fr)`;
 });
+
+// ==================== DRAG & DROP ====================
+(function initDragAndDrop() {
+  const setupDropZone    = document.getElementById('setupDropZone');
+  const setupDropTitle   = document.getElementById('setupDropTitle');
+  const setupDropHint    = document.getElementById('setupDropHint');
+  const modalDropOverlay = document.getElementById('modalDropOverlay');
+  const setupPanelEl     = document.getElementById('setupPanel');
+
+  // Zähler, um verschachtelte dragenter/dragleave zu handhaben
+  let setupDragCounter = 0;
+  let modalDragCounter = 0;
+
+  const isFileDrag = (e) => {
+    if (!e.dataTransfer) return false;
+    const types = Array.from(e.dataTransfer.types || []);
+    return types.includes('Files');
+  };
+
+  // ---------- Setup-Panel: Drop-Zone ----------
+  setupPanelEl.addEventListener('dragenter', (e) => {
+    if (!isFileDrag(e)) return;
+    // Kein Setup-Drop, wenn der Editor offen ist
+    if (!createModal.classList.contains('hidden')) return;
+    e.preventDefault();
+    setupDragCounter++;
+    updateSetupDropZoneText();
+    setupDropZone.classList.add('active');
+  });
+
+  setupPanelEl.addEventListener('dragover', (e) => {
+    if (!isFileDrag(e)) return;
+    if (!createModal.classList.contains('hidden')) return;
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'copy';
+  });
+
+  setupPanelEl.addEventListener('dragleave', (e) => {
+    if (!isFileDrag(e)) return;
+    setupDragCounter = Math.max(0, setupDragCounter - 1);
+    if (setupDragCounter === 0) {
+      setupDropZone.classList.remove('active');
+    }
+  });
+
+  setupPanelEl.addEventListener('drop', async (e) => {
+    if (!isFileDrag(e)) return;
+    e.preventDefault();
+    setupDragCounter = 0;
+    setupDropZone.classList.remove('active');
+
+    const files = Array.from(e.dataTransfer.files || []);
+    if (files.length === 0) return;
+
+    const customThemes = getCustomThemes();
+    const currentThemeKey = themeSelect.value;
+
+    if (customThemes[currentThemeKey]) {
+      // Custom-Thema ausgewählt -> Bearbeiten-Dialog öffnen und Bilder aufnehmen
+      await openEditor('edit', currentThemeKey);
+      await addImagesFromFiles(files);
+    } else {
+      // Default-Thema -> Neu-erstellen-Dialog öffnen
+      await openEditor('create');
+      await addImagesFromFiles(files);
+    }
+  });
+
+  function updateSetupDropZoneText() {
+    const customThemes = getCustomThemes();
+    const currentThemeKey = themeSelect.value;
+    if (customThemes[currentThemeKey]) {
+      setupDropTitle.textContent = 'Bilder dem Thema hinzufügen';
+      setupDropHint.textContent = `„${customThemes[currentThemeKey].label}" wird bearbeitet`;
+    } else {
+      setupDropTitle.textContent = 'Bilder einem neuen Thema hinzufügen';
+      setupDropHint.textContent = 'Neues Thema wird erstellt';
+    }
+  }
+
+  // ---------- Modal: Drop-Overlay ----------
+  // Wir hängen die Listener an das Modal-Content-Element,
+  // damit sie nur greifen, wenn der Editor offen ist.
+  const modalContent = createModal.querySelector('.modal-content');
+
+  modalContent.addEventListener('dragenter', (e) => {
+    if (!isFileDrag(e)) return;
+    e.preventDefault();
+    modalDragCounter++;
+    modalDropOverlay.classList.add('active');
+  });
+
+  modalContent.addEventListener('dragover', (e) => {
+    if (!isFileDrag(e)) return;
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'copy';
+  });
+
+  modalContent.addEventListener('dragleave', (e) => {
+    if (!isFileDrag(e)) return;
+    modalDragCounter = Math.max(0, modalDragCounter - 1);
+    if (modalDragCounter === 0) {
+      modalDropOverlay.classList.remove('active');
+    }
+  });
+
+  modalContent.addEventListener('drop', async (e) => {
+    if (!isFileDrag(e)) return;
+    e.preventDefault();
+    modalDragCounter = 0;
+    modalDropOverlay.classList.remove('active');
+
+    const files = Array.from(e.dataTransfer.files || []);
+    if (files.length === 0) return;
+
+    await addImagesFromFiles(files);
+  });
+
+  // Beim Schließen/Speichern/Löschen des Modals Overlay zurücksetzen
+  closeModalBtn.addEventListener('click', () => {
+    modalDragCounter = 0;
+    modalDropOverlay.classList.remove('active');
+  });
+  deleteThemeBtnInModal.addEventListener('click', () => {
+    modalDragCounter = 0;
+    modalDropOverlay.classList.remove('active');
+  });
+  saveThemeBtn.addEventListener('click', () => {
+    modalDragCounter = 0;
+    modalDropOverlay.classList.remove('active');
+  });
+})();
 </script>
 </body>
 </html>
