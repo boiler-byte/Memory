@@ -196,6 +196,7 @@ button:disabled {
   margin-top: 2rem;
   justify-content: center;
   margin: 1rem auto;
+  perspective: 1200px;
 }
 .card {
   aspect-ratio: 1 / 1;
@@ -248,6 +249,42 @@ button:disabled {
   object-fit: cover;
   border-radius: 1rem;
   display: block;
+  transition: all 0.3s;
+}
+
+/* ---------- NEU: Deal-Animation ---------- */
+.card.dealing {
+  opacity: 0;
+  transform: translateY(-120px) scale(0.3) rotate(-15deg);
+  pointer-events: none;
+}
+.card.deal-in {
+  animation: dealCard 0.45s cubic-bezier(0.22, 1.2, 0.36, 1) forwards;
+  pointer-events: none;
+}
+@keyframes dealCard {
+  0% {
+    opacity: 0;
+    transform: translateY(-120px) scale(0.3) rotate(-15deg);
+  }
+  60% {
+    opacity: 1;
+    transform: translateY(8px) scale(1.04) rotate(2deg);
+  }
+  80% {
+    transform: translateY(-3px) scale(0.99) rotate(-0.5deg);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1) rotate(0deg);
+  }
+}
+/* Board während Deal gesperrt */
+.board.dealing-active {
+  pointer-events: none;
+}
+.board.dealing-active .card {
+  pointer-events: none;
 }
 
 /* Ergebnisliste & Modal */
@@ -277,6 +314,17 @@ button:disabled {
   padding: 0.5rem 0.2rem;
   border-bottom: 1px solid #26303b;
 }
+.result-list .result-theme,
+.result-list .result-time {
+  color: var(--ui-muted);
+  font-size: 0.85em;
+}
+.result-list .result-time {
+  cursor: help;
+  text-decoration: underline dotted;
+  text-underline-offset: 2px;
+}
+
 .highscore-box {
   background: #1e2a36;
   border-radius: 1rem;
@@ -362,9 +410,6 @@ width: auto;
 .abort-btn:hover {
 background: #5c2f3a;
 color: #ffd7e0;
-}
-.abort-btn.hidden {
-display: none !important;
 }
 
 /* ---------- NEU: Bildervorschau ---------- */
@@ -581,8 +626,8 @@ body:not([data-ui-theme="default"]) select, body:not([data-ui-theme="default"]) 
   color:var(--ui-text);
 }
 body:not([data-ui-theme="default"]) select:focus, body:not([data-ui-theme="default"]) input:focus { border-color:var(--ui-accent); box-shadow:0 0 0 3px color-mix(in srgb,var(--ui-accent) 25%,transparent); }
-body:not([data-ui-theme="default"]) button:not(.abort-btn):not(.delete-theme-btn):not(.close-btn) { background:var(--ui-button); color:#fff; }
-body:not([data-ui-theme="default"]) button:not(.abort-btn):not(.delete-theme-btn):not(.close-btn):hover:not(:disabled) { background:var(--ui-button-hover); }
+body:not([data-ui-theme="default"]) button:not(.abort-btn):not(.delete-theme-btn):not(.close-btn):not(.peek-btn) { background:var(--ui-button); color:#fff; }
+body:not([data-ui-theme="default"]) button:not(.abort-btn):not(.delete-theme-btn):not(.close-btn):not(.peek-btn):hover:not(:disabled) { background:var(--ui-button-hover); }
 body:not([data-ui-theme="default"]) .card { background:var(--ui-card); border-radius:var(--ui-card-radius); box-shadow:var(--ui-shadow); }
 body:not([data-ui-theme="default"]) .card .card-front, body:not([data-ui-theme="default"]) .card .card-back { border-radius:var(--ui-card-radius); }
 body:not([data-ui-theme="default"]) .card .card-back { background:var(--ui-card-back); border-color:var(--ui-card-border); color:var(--ui-card-icon); }
@@ -706,10 +751,12 @@ body[data-ui-theme="minimal"] {
   }
 }
 
+#timerDisplay { display: inline-block;min-width: 4rem; }
 
 .small-show { display: none;}
 /* responsive */
 @media (max-width: 600px) {
+  #timerDisplay { display: inline-block;min-width: 3rem; }
   .stats-bar { gap: 1rem; padding: 0.7rem 1rem; }
   .stat-item { font-size: 1rem; }
   .stat-item i { font-size: 1.4rem; }
@@ -800,12 +847,180 @@ body[data-ui-theme="minimal"] {
 .modal-drop-overlay.active {
   opacity: 1;
 }
+
+/* ---------- Merkphase: Schalter ---------- */
+.field-group label.switch {
+  position: relative;
+  display: inline-block;
+  width: 58px;
+  height: 32px;
+  margin-bottom: 0;
+  cursor: pointer;
+  text-transform: none;
+  letter-spacing: normal;
+}
+.switch input {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+.switch .slider {
+  position: absolute;
+  inset: 0;
+  background: var(--ui-control);
+  border: 1px solid var(--ui-control-border);
+  border-radius: 40px;
+  transition: background .2s, border-color .2s;
+}
+.switch .slider::before {
+  content: '';
+  position: absolute;
+  width: 24px; height: 24px;
+  left: 3px; top: 3px;
+  border-radius: 50%;
+  background: var(--ui-muted);
+  transition: transform .2s, background .2s;
+}
+.switch input:checked + .slider {
+  background: var(--ui-button);
+  border-color: var(--ui-accent);
+}
+.switch input:checked + .slider::before {
+  transform: translateX(26px);
+  background: #fff;
+}
+.switch input:focus-visible + .slider {
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--ui-accent) 25%, transparent);
+}
+
+/* ---------- Merkphase: Hinweis ---------- */
+.merk-hint {
+  position: fixed;
+  left: 50%;
+  bottom: 2rem;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.8rem 1.6rem;
+  border-radius: 40px;
+  background: var(--ui-bar);
+  color: var(--ui-text);
+  border: 1px solid var(--ui-accent);
+  box-shadow: var(--ui-shadow);
+  font-weight: 600;
+  z-index: 1500;
+  pointer-events: none;
+  animation: merkPulse 1.2s ease-in-out infinite;
+}
+@keyframes merkPulse {
+  0%, 100% { opacity: 1; }
+  50%      { opacity: .6; }
+}
+
+/* ---------- NEU: Deal-Hinweis ---------- */
+.deal-hint {
+  position: fixed;
+  left: 50%;
+  bottom: 2rem;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.8rem 1.6rem;
+  border-radius: 40px;
+  background: var(--ui-bar);
+  color: var(--ui-text);
+  border: 1px solid var(--ui-accent);
+  box-shadow: var(--ui-shadow);
+  font-weight: 600;
+  z-index: 1500;
+  pointer-events: none;
+  animation: dealPulse 0.9s ease-in-out infinite;
+}
+@keyframes dealPulse {
+  0%, 100% { opacity: 1; transform: translateX(-50%) scale(1); }
+  50%      { opacity: .75; transform: translateX(-50%) scale(1.03); }
+}
+
+/* ---------- NEU: Peek-Button ---------- */
+.peek-wrapper {
+  padding: 0;
+  gap: 0;
+}
+.peek-btn {
+  position: relative;
+  width: 52px;
+  height: 52px;
+  padding: 0;
+  border-radius: 50%;
+  background: #1e2632;
+  border: 1px solid #334155;
+  color: #5f9ea0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+  cursor: pointer;
+  transition: transform .15s, background .15s, color .15s;
+}
+.peek-btn i { font-size: 1.5rem; color: inherit; }
+.peek-btn:hover:not(:disabled) { background: #2e4a5c; color: #eef2f5; transform: scale(1.07); }
+.peek-btn:active:not(:disabled) { transform: scale(0.96); }
+.peek-btn:disabled { opacity: .45; cursor: not-allowed; }
+.peek-badge {
+  position: absolute;
+  top: -5px;
+  right: -5px;
+  min-width: 22px;
+  height: 22px;
+  padding: 0 6px;
+  border-radius: 20px;
+  background: var(--ui-accent, #5f9ea0);
+  color: #0b0e14;
+  font-size: .78rem;
+  font-weight: 700;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 6px rgba(0,0,0,.45);
+}
+
+/* Peek-Button an UI-Theme anpassen */
+body:not([data-ui-theme="default"]) .peek-btn {
+  background: var(--ui-control);
+  border-color: var(--ui-control-border);
+  color: var(--ui-accent);
+}
+body:not([data-ui-theme="default"]) .peek-btn:hover:not(:disabled) {
+  background: var(--ui-button);
+  color: #fff;
+}
+body:not([data-ui-theme="default"]) .peek-badge {
+  background: var(--ui-accent);
+  color: var(--ui-bg);
+}
+
+@media (max-width: 600px) {
+  .peek-btn { width: 44px; height: 44px; }
+  .peek-btn i { font-size: 1.25rem; }
+  .peek-badge { min-width: 19px; height: 19px; font-size: .7rem; }
+}
 </style>
 </head>
 <body>
 <div class="app">
   <!-- Kopfzeile: Zeit & Züge -->
   <div class="stats-bar" id="statsBar">
+    <!-- NEU: Peek-Button (nur während des Spiels sichtbar) -->
+    <div class="stat-item peek-wrapper hidden" id="peekWrapper">
+      <button class="peek-btn" id="peekBtn" title="Peek: deckt alle Karten 1 Sekunde auf (kostet 3 Züge)">
+        <i class="bi bi-eye-fill"></i>
+        <span class="peek-badge" id="peekBadge">0</span>
+      </button>
+    </div>
     <div class="stat-item"><i class="bi bi-clock"></i> <span id="timerDisplay">0:00</span></div>
     <div class="stat-item"><i class="bi bi-lightning-charge"></i> <span id="movesDisplay">0</span></div>
     <div class="stat-item ui-theme-control">
@@ -841,8 +1056,16 @@ body[data-ui-theme="minimal"] {
           <button class="delete-theme-btn" id="editThemeBtn" title="Thema bearbeiten"><i class="bi bi-pencil-square"></i></button>
         </div>
       </div>
+      <!-- Merkphase -->
+      <div class="field-group">
+        <label for="merkphaseToggle">Merkphase*</label>
+        <label class="switch">
+          <input type="checkbox" id="merkphaseToggle">
+          <span class="slider"></span>
+        </label>
+      </div>
     </div>
-    <!-- NEU: Bildervorschau -->
+    <!-- Bildervorschau -->
   <div class="theme-preview" id="themePreview">
     <div class="theme-preview-title">
       <span><i class="bi bi-images"></i> Bildervorschau</span>
@@ -859,6 +1082,21 @@ body[data-ui-theme="minimal"] {
 
   <!-- Spielbrett -->
   <div class="board" id="gameBoard"></div>
+
+  <!-- Hinweis während der Merkphase -->
+  <div id="merkHint" class="merk-hint hidden">
+    <i class="bi bi-eye"></i> Merken… <span id="merkHintCount">3</span>s
+  </div>
+
+  <!-- NEU: Hinweis während der Deal-Animation -->
+  <div id="dealHint" class="deal-hint hidden">
+    <i class="bi bi-stack"></i> Karten werden ausgeteilt…
+  </div>
+
+  <!-- NEU: Hinweis während des Peeks -->
+  <div id="peekHint" class="merk-hint hidden">
+    <i class="bi bi-eye-fill"></i> Peek… <span id="peekHintCount">1</span>s
+  </div>
 
   <!-- Endgame-Overlay (Name speichern) -->
   <div id="endGamePanel" class="end-game-panel hidden">
@@ -907,7 +1145,7 @@ body[data-ui-theme="minimal"] {
       <button id="saveThemeBtn">Speichern</button>
     </div>
 
-    <!-- NEU: Drop-Overlay im Modal -->
+    <!-- Drop-Overlay im Modal -->
     <div id="modalDropOverlay" class="modal-drop-overlay">
       <div class="drop-zone-inner">
         <i class="bi bi-cloud-arrow-up"></i>
@@ -918,7 +1156,7 @@ body[data-ui-theme="minimal"] {
   </div>
 </div>
 
-<!-- NEU: Globale Drop-Zone für Setup-Panel -->
+<!-- Globale Drop-Zone für Setup-Panel -->
 <div id="setupDropZone" class="drop-zone">
   <div class="drop-zone-inner">
     <i class="bi bi-cloud-arrow-up"></i>
@@ -953,20 +1191,21 @@ applyUiTheme(savedUiTheme);
 // lg = Desktop/breit (> 600px)
 // Maximal 8 Spalten und 8 Zeilen erlaubt.
 // Wichtig: cols*rows muss in sm und lg identisch sein, sonst passt die Set-Anzahl nicht.
+// @todo peeks = wie oft kann die Peek-Taste verwendet werden, um die restlichen Karten für eine Sekunde aufzudecken
 const GAMES = {
-  easy:      { label: "6 Paare",     selection: 2, cards: 12, grid: { sm: [3, 4], lg: [4, 3] }, maxWidth: "800px" },
-  medium:    { label: "10 Paare",    selection: 2, cards: 20, grid: { sm: [4, 5], lg: [5, 4] } },
-  hard:    { label: "15 Paare",    selection: 2, cards: 30, grid: { sm: [5, 6], lg: [6, 5] } },
-  harder:    { label: "20 Paare",    selection: 2, cards: 40, grid: { sm: [5, 8], lg: [6, 7] }, maxWidth: "900px" },
-  triplets4: { label: "4 Triplets",  selection: 3, cards: 12, grid: { sm: [3, 4], lg: [4, 3] }, maxWidth: "800px" },
-  triplet6:  { label: "6 Triplets",  selection: 3, cards: 18, grid: { sm: [3, 6], lg: [6, 3] } },
-  triplet8:  { label: "8 Triplets",  selection: 3, cards: 24, grid: { sm: [4, 6], lg: [6, 4] } },
-  triplet10:  { label: "10 Triplets",  selection: 3, cards: 30, grid: { sm: [5, 6], lg: [6, 5] } },
-  triplet14:  { label: "14 Triplets",  selection: 3, cards: 42, grid: { sm: [6, 7], lg: [7, 6] } },
-  quads4:    { label: "4 Quads",     selection: 4, cards: 16, grid: { sm: [4, 4], lg: [4, 4] } },
-  quads5:     { label: "5 Quads",     selection: 4, cards: 20, grid: { sm: [4, 5], lg: [5, 4] } },
-  quads6:     { label: "6 Quads",     selection: 4, cards: 24, grid: { sm: [4, 6], lg: [6, 4] } },
-  quads9:     { label: "9 Quads",     selection: 4, cards: 36, grid: { sm: [6, 6], lg: [6, 6] } },
+  easy:      { label: "6 Paare",     selection: 2, cards: 12, grid: { sm: [3, 4], lg: [4, 3] }, maxWidth: "800px", peeks: 1 },
+  medium:    { label: "10 Paare",    selection: 2, cards: 20, grid: { sm: [4, 5], lg: [5, 4] }, peeks: 2 },
+  hard:    { label: "15 Paare",    selection: 2, cards: 30, grid: { sm: [5, 6], lg: [6, 5] }, peeks: 3 },
+  harder:    { label: "20 Paare",    selection: 2, cards: 40, grid: { sm: [5, 8], lg: [6, 7] }, maxWidth: "900px", peeks: 3 },
+  triplets4: { label: "4 Triplets",  selection: 3, cards: 12, grid: { sm: [3, 4], lg: [4, 3] }, maxWidth: "800px", peeks: 1 },
+  triplet6:  { label: "6 Triplets",  selection: 3, cards: 18, grid: { sm: [3, 6], lg: [6, 3] }, peeks: 2 },
+  triplet8:  { label: "8 Triplets",  selection: 3, cards: 24, grid: { sm: [4, 6], lg: [6, 4] }, peeks: 3 },
+  triplet10:  { label: "10 Triplets",  selection: 3, cards: 30, grid: { sm: [5, 6], lg: [6, 5] }, peeks: 3 },
+  triplet14:  { label: "14 Triplets",  selection: 3, cards: 42, grid: { sm: [6, 7], lg: [7, 6] }, peeks: 3 },
+  quads4:    { label: "4 Quads",     selection: 4, cards: 16, grid: { sm: [4, 4], lg: [4, 4] }, peeks: 2 },
+  quads5:     { label: "5 Quads",     selection: 4, cards: 20, grid: { sm: [4, 5], lg: [5, 4] }, peeks: 3 },
+  quads6:     { label: "6 Quads",     selection: 4, cards: 24, grid: { sm: [4, 6], lg: [6, 4] }, peeks: 3 },
+  quads9:     { label: "9 Quads",     selection: 4, cards: 36, grid: { sm: [6, 6], lg: [6, 6] }, peeks: 5 },
 };
 
 const THEMES = {
@@ -1000,6 +1239,17 @@ let state = {
   elapsed: 0,
   inputLocked: false,
   selectionSize: 2,
+  // Merkphase
+  merkphase: false,
+  memorizeTimer: null,
+  memorizeInterval: null,
+  // NEU: Deal-Animation
+  dealTimer: null,
+  dealing: false,
+  // NEU: Peek
+  peeksLeft: 0,
+  peekActive: false,
+  peekTimer: null,
 };
 
 // IndexedDB-Verbindung
@@ -1107,9 +1357,21 @@ const endGamePanel = document.getElementById('endGamePanel');
 const endGameStats = document.getElementById('endGameStats');
 const playerNameInput = document.getElementById('playerNameInput');
 const saveScoreBtn = document.getElementById('saveScoreBtn');
-// NEU: Vorschau-Elemente
+// Vorschau-Elemente
 const themePreviewGrid = document.getElementById('themePreviewGrid');
 const themePreviewCount = document.getElementById('themePreviewCount');
+// Merkphase
+const merkphaseToggle = document.getElementById('merkphaseToggle');
+const merkHint = document.getElementById('merkHint');
+const merkHintCount = document.getElementById('merkHintCount');
+// NEU: Deal-Hinweis
+const dealHint = document.getElementById('dealHint');
+// NEU: Peek
+const peekWrapper = document.getElementById('peekWrapper');
+const peekBtn = document.getElementById('peekBtn');
+const peekBadge = document.getElementById('peekBadge');
+const peekHint = document.getElementById('peekHint');
+const peekHintCount = document.getElementById('peekHintCount');
 
 // Spielauswahl befüllen
 function populateGameSelect() {
@@ -1148,7 +1410,6 @@ function populateThemeSelect() {
     themeSelect.value = state.themeKey;
   }
   validateThemeAndGame();
-  // renderThemePreview(); // NEU
 }
 
 // ==================== RESPONSIVE GRID ====================
@@ -1196,7 +1457,7 @@ function validateThemeAndGame() {
   }
 }
 
-// NEU: Vorschau rendern
+// Vorschau rendern
 async function renderThemePreview() {
   const themeKey = themeSelect.value;
   const custom = getCustomThemes();
@@ -1262,34 +1523,78 @@ async function renderThemePreview() {
   themePreviewCount.textContent = `${totalImages} Bilder`;
 }
 
+// Highscore-Key – bei aktiver Merkphase mit "*" markiert
+function getHighscoreKey(gameKey, themeKey, merkphase) {
+  return `${gameKey}${merkphase ? '*' : ''}_${themeKey}`;
+}
+
 // Highscore-Anzeige aktualisieren
 function updateHighscoreDisplay() {
   const game = gameSelect.value;
   const theme = themeSelect.value;
-  const key = `${game}_${theme}`;
+  const merk = merkphaseToggle.checked;
+  const key = getHighscoreKey(game, theme, merk);
   const hs = getHighscores();
   const entry = hs[key];
+  const label = merk ? 'Highscore (Merkphase)' : 'Highscore';
   if (entry) {
-    highscoreDisplay.textContent = `Highscore: ${formatTime(entry.elapsed)} (${entry.moves} Züge)`;
+    highscoreDisplay.textContent = `${label}: ${formatTime(entry.elapsed)} (${entry.moves} Züge)`;
   } else {
-    highscoreDisplay.textContent = 'Highscore: –';
+    highscoreDisplay.textContent = `${label}: –`;
   }
 }
 
 // Ergebnisliste rendern
-function renderResults() {
-  const results = getResults();
-  resultList.innerHTML = '';
-  if (results.length === 0) {
-    resultList.innerHTML = '<li>Noch keine Ergebnisse</li>';
-    return;
+  function renderResults() {
+    const results = getResults();
+    resultList.innerHTML = '';
+    if (results.length === 0) {
+      resultList.innerHTML = '<li>Noch keine Ergebnisse</li>';
+      return;
+    }
+    results.forEach(r => {
+      const li = document.createElement('li');
+
+      // Thema ermitteln (Standard- oder Custom-Theme)
+      const themeKey = r.theme || '';
+      const themeLabel = getThemeLabel(themeKey);
+      const themeText = themeLabel
+        ? ` · <span class="result-theme"><i class="bi bi-images"></i> ${escapeHtml(themeLabel)}</span>`
+        : '';
+
+      const merk = r.merkphase ? ' · <i class="bi bi-eye"></i> Merkphase' : '';
+      const relTime = r.timestamp ? ` · <span class="result-time" title="${escapeHtml(new Date(r.timestamp).toLocaleString('de-DE'))}">${formatRelativeTime(r.timestamp)}</span>` : '';
+
+      li.innerHTML = `<span>${escapeHtml(r.name)} · ${GAMES[r.game]?.label || r.game}${themeText} · ${formatTime(r.elapsed)} · ${r.moves} Züge${merk}${relTime}</span>`;
+      resultList.appendChild(li);
+    });
   }
-  results.forEach(r => {
-    const li = document.createElement('li');
-    li.innerHTML = `<span>${escapeHtml(r.name)} · ${GAMES[r.game]?.label || r.game} · ${formatTime(r.elapsed)} · ${r.moves} Züge</span>`;
-    resultList.appendChild(li);
-  });
-}
+
+  // Liefert den Anzeigenamen eines Themes (Standard oder Custom)
+  function getThemeLabel(themeKey) {
+    if (!themeKey) return '';
+    if (THEMES[themeKey]) return THEMES[themeKey].label;
+    const custom = getCustomThemes();
+    if (custom[themeKey]) return custom[themeKey].label;
+    return themeKey;
+  }
+
+  // Ungefähre relative Zeitangabe
+  function formatRelativeTime(timestamp) {
+    const now = Date.now();
+    const diffMs = Math.max(0, now - timestamp);
+    const diffMin = diffMs / 60000;
+    const diffHr = diffMin / 60;
+    const diffDay = diffHr / 24;
+    const diffWeek = diffDay / 7;
+
+    if (diffMin < 1) return 'gerade eben';
+    if (diffMin < 60) return `vor ${Math.floor(diffMin)} Min.`;
+    if (diffHr < 24) return `vor ${Math.floor(diffHr)} Std.`;
+    if (diffDay < 30) return `vor ${Math.floor(diffDay)} ${diffDay < 2 ? 'Tag' : 'Tagen'}`;
+    if (diffDay < 90) return `vor ${Math.floor(diffWeek)} ${diffWeek < 2 ? 'Woche' : 'Wochen'}`;
+    return String(new Date(timestamp).getFullYear());
+  }
 
 function escapeHtml(text) {
   const div = document.createElement('div');
@@ -1393,10 +1698,18 @@ async function startGame() {
   state.gameKey = gameKey;
   state.themeKey = themeKey;
   state.elapsed = 0;
+  // Merkphase
+  state.merkphase = merkphaseToggle.checked;
+  if (state.memorizeTimer) { clearTimeout(state.memorizeTimer); state.memorizeTimer = null; }
+  if (state.memorizeInterval) { clearInterval(state.memorizeInterval); state.memorizeInterval = null; }
   timerDisplay.textContent = '0:00';
   movesDisplay.textContent = '0';
   if (state.timerInterval) clearInterval(state.timerInterval);
   state.startTime = null;
+  // NEU: Peek zurücksetzen
+  if (state.peekTimer) { clearTimeout(state.peekTimer); state.peekTimer = null; }
+  state.peekActive = false;
+  state.peeksLeft = game.peeks ?? 0;
 
   // UI umschalten
   setupPanel.classList.add('hidden');
@@ -1405,6 +1718,200 @@ async function startGame() {
   // Timer startet beim ersten Aufdecken
 
   abortGameBtn.classList.remove('hidden');
+  uiThemeSelect.classList.add('hidden');
+
+  // NEU: Deal-Animation ausführen, dann ggf. Merkphase starten
+  await runDealAnimation();
+
+  // Merkphase – alle Karten kurz aufdecken (nach dem Austeilen)
+  if (state.merkphase && state.gameActive) {
+    await runMemorizePhase();
+  }
+
+  // Peek-Button erst nach Austeilen/Merkphase anzeigen
+  updatePeekButton();
+}
+
+// ==================== NEU: DEAL-ANIMATION ====================
+/**
+ * Lässt die Karten nacheinander einfliegen.
+ * Die Karten sind während der Animation nicht anklickbar.
+ * Danach wird inputLocked freigegeben.
+ */
+function runDealAnimation() {
+  return new Promise((resolve) => {
+    if (!state.gameActive) { resolve(); return; }
+
+    state.dealing = true;
+    state.inputLocked = true;
+
+    const cardEls = Array.from(gameBoard.children);
+    const total = cardEls.length;
+    if (total === 0) {
+      state.dealing = false;
+      state.inputLocked = false;
+      resolve();
+      return;
+    }
+
+    // Board während der Animation sperren
+    gameBoard.classList.add('dealing-active');
+
+    // Alle Karten zunächst unsichtbar/verschoben setzen
+    cardEls.forEach(el => {
+      el.classList.add('dealing');
+    });
+
+    // Deal-Hinweis anzeigen
+    dealHint.classList.remove('hidden');
+
+    // Timing: abhängig von der Kartenzahl, damit die Animation nicht zu lang wird.
+    // Insgesamt ca. 0,6–2,4 Sekunden reine Staffelung + 0,45s pro Karte.
+    const stagger = Math.max(18, Math.min(60, 1400 / total)); // ms zwischen Karten
+    const perCardDur = 450; // muss zur CSS-Animation passen
+
+    let i = 0;
+    function dealNext() {
+      if (!state.gameActive) {
+        // Spiel wurde abgebrochen – Animation sauber beenden
+        cleanupDeal(cardEls, resolve);
+        return;
+      }
+      if (i >= total) {
+        // letzte Karte braucht noch ihre Animationszeit
+        state.dealTimer = setTimeout(() => {
+          cleanupDeal(cardEls, resolve);
+        }, perCardDur);
+        return;
+      }
+
+      const el = cardEls[i];
+      el.classList.remove('dealing');
+      el.classList.add('deal-in');
+      // Deal-Sound (leises Klick/Flip-Geräusch)
+      try { sfx.deal && sfx.deal(); } catch (_) {}
+
+      i++;
+      state.dealTimer = setTimeout(dealNext, stagger);
+    }
+
+    // Kurzer Startverzug, damit das Board sichtbar ist
+    state.dealTimer = setTimeout(dealNext, 120);
+  });
+}
+
+function cleanupDeal(cardEls, resolve) {
+  if (state.dealTimer) { clearTimeout(state.dealTimer); state.dealTimer = null; }
+  cardEls.forEach(el => {
+    el.classList.remove('dealing', 'deal-in');
+  });
+  gameBoard.classList.remove('dealing-active');
+  dealHint.classList.add('hidden');
+  state.dealing = false;
+  // inputLocked wird hier NICHT freigegeben, falls die Merkphase folgt.
+  // Die Merkphase setzt inputLocked ohnehin auf true.
+  // Wenn keine Merkphase folgt, muss inputLocked freigegeben werden:
+  if (!state.merkphase) {
+    state.inputLocked = false;
+  }
+  resolve();
+}
+
+// Merkphase – deckt alle Karten kurz auf (zählt nicht als Zug, Timer läuft noch nicht)
+function runMemorizePhase() {
+  return new Promise((resolve) => {
+    if (!state.merkphase || !state.gameActive) { resolve(); return; }
+
+    // Dauer abhängig von der Kartenzahl (ca. 2,2 s – 6 s)
+    const duration = Math.min(6000, 1000 + state.cards.length * 100);
+    state.inputLocked = true;
+
+    const cardEls = Array.from(gameBoard.children);
+    cardEls.forEach(el => el.classList.add('flipped'));
+
+    let remaining = Math.ceil(duration / 1000);
+    merkHintCount.textContent = remaining;
+    merkHint.classList.remove('hidden');
+
+    state.memorizeInterval = setInterval(() => {
+      remaining--;
+      if (remaining > 0) merkHintCount.textContent = remaining;
+    }, 1000);
+
+    state.memorizeTimer = setTimeout(() => {
+      clearInterval(state.memorizeInterval);
+      state.memorizeInterval = null;
+      state.memorizeTimer = null;
+
+      merkHint.classList.add('hidden');
+      if (!state.gameActive) { resolve(); return; }
+
+      cardEls.forEach(el => el.classList.remove('flipped'));
+      state.inputLocked = false;
+      resolve();
+    }, duration);
+  });
+}
+
+// ==================== NEU: PEEK ====================
+function updatePeekButton() {
+  const available = state.gameActive && state.peeksLeft > 0;
+  peekWrapper.classList.toggle('hidden', !available);
+  peekBadge.textContent = state.peeksLeft;
+  peekBtn.disabled = state.peekActive;
+}
+
+/**
+ * Deckt alle noch nicht gefundenen Karten für 1 Sekunde auf.
+ * Kostet 3 Züge und verbraucht einen Peek.
+ */
+function usePeek() {
+  if (!state.gameActive || state.dealing || state.peekActive) return;
+  if (state.inputLocked) return;
+  if (state.peeksLeft <= 0) return;
+
+  state.peeksLeft--;
+  state.peekActive = true;
+  state.inputLocked = true;
+  updatePeekButton();
+
+  // Peek kostet 3 Züge
+  state.moves += 3;
+  movesDisplay.textContent = state.moves;
+
+  // Timer starten, falls noch nicht geschehen
+  if (state.startTime === null) {
+    state.startTime = Date.now();
+    startTimer();
+  }
+
+  // Laufende Auswahl verwerfen, damit kein inkonsistenter Zustand entsteht
+  state.firstSelection = [];
+
+  const cardEls = Array.from(gameBoard.children);
+  const revealed = [];
+  state.cards.forEach((card, i) => {
+    if (card.matched) return;
+    const el = cardEls[i];
+    if (!el) return;
+    el.classList.add('flipped');
+    revealed.push(el);
+  });
+
+  try { sfx.peek(); } catch (_) {}
+
+  peekHintCount.textContent = '1';
+  peekHint.classList.remove('hidden');
+
+  state.peekTimer = setTimeout(() => {
+    state.peekTimer = null;
+    state.peekActive = false;
+    revealed.forEach(el => el.classList.remove('flipped'));
+    peekHint.classList.add('hidden');
+    if (!state.gameActive) return;
+    state.inputLocked = false;
+    updatePeekButton();
+  }, 1000);
 }
 
 function shuffleArray(arr) {
@@ -1453,6 +1960,7 @@ function renderBoard(rows, cols, maxWidth) {
 
 function onCardClick(index) {
   if (!state.gameActive || state.inputLocked) return;
+  if (state.dealing) return; // Sicherheitsnetz
   const card = state.cards[index];
   if (card.matched) return;
   const cardEl = gameBoard.children[index];
@@ -1466,6 +1974,7 @@ function onCardClick(index) {
 
   // Karte aufdecken
   cardEl.classList.add('flipped');
+  try { sfx.flip(); } catch (_) {}
   state.firstSelection.push({ index, setIndex: card.setIndex, el: cardEl });
 
   if (state.firstSelection.length === state.selectionSize) {
@@ -1487,6 +1996,7 @@ function onCardClick(index) {
       state.matchedSets++;
       state.firstSelection = [];
       state.inputLocked = false;
+      try { sfx.match(); } catch (_) {}
 
       // Spielende prüfen
       if (state.matchedSets === state.totalSets) {
@@ -1494,6 +2004,7 @@ function onCardClick(index) {
       }
     } else {
       // Fehlschlag: nach 1 Sekunde zurückdrehen
+      try { sfx.mismatch(); } catch (_) {}
       setTimeout(() => {
         selection.forEach(s => {
           s.el.classList.remove('flipped');
@@ -1505,9 +2016,51 @@ function onCardClick(index) {
   }
 }
 
+let audioCtx = null;
+function beep(freq, duration = 0.08, type = 'sine', volume = 0.05) {
+  if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  if (audioCtx.state === 'suspended') audioCtx.resume();
+  const osc = audioCtx.createOscillator();
+  const gain = audioCtx.createGain();
+  osc.type = type;
+  osc.frequency.value = freq;
+  gain.gain.setValueAtTime(volume, audioCtx.currentTime);
+  gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + duration);
+  osc.connect(gain).connect(audioCtx.destination);
+  osc.start();
+  osc.stop(audioCtx.currentTime + duration);
+}
+const sfx = {
+  flip:     () => beep(520, 0.06),
+  match:    () => { beep(660, 0.10); setTimeout(() => beep(880, 0.15), 80); },
+  mismatch: () => beep(180, 0.18, 'sawtooth', 0.025),
+  win:      () => [523, 659, 784, 1047].forEach((f, i) => setTimeout(() => beep(f, 0.22), i * 110)),
+  // NEU: Deal-Sound – sehr leise, kurzer Tick
+  deal:     () => beep(320 + Math.random() * 140, 0.035, 'triangle', 0.018),
+  // NEU: Peek-Sound
+  peek:     () => { beep(760, 0.09); setTimeout(() => beep(1140, 0.12), 80); },
+};
+function fireConfetti() {
+  const colors = ['#5f9ea0','#00f5d4','#ffbf47','#f87171','#a143ef','#8ce9ff'];
+  for (let i = 0; i < 90; i++) {
+    const p = document.createElement('div');
+    p.style.cssText = `position:fixed;left:50%;top:40%;width:8px;height:8px;background:${colors[i % colors.length]};z-index:9999;pointer-events:none;border-radius:2px;`;
+    document.body.appendChild(p);
+    const angle = Math.random() * Math.PI * 2;
+    const dist = 100 + Math.random() * 450;
+    p.animate([
+      { transform: 'translate(-50%,-50%) rotate(0deg)', opacity: 1 },
+      { transform: `translate(${Math.cos(angle)*dist - 50}%,${Math.sin(angle)*dist + 300}%) rotate(${Math.random()*720}deg)`, opacity: 0 }
+    ], { duration: 1400 + Math.random()*1000, easing: 'cubic-bezier(0.15,0.6,0.4,1)' });
+    setTimeout(() => p.remove(), 2600);
+  }
+}
+
 async function endGame() {
   state.gameActive = false;
   stopTimer();
+  // NEU: Peek-Button ausblenden
+  updatePeekButton();
 
   // Zeit und Züge
   const elapsed = state.elapsed;
@@ -1522,16 +2075,21 @@ async function endGame() {
   endGamePanel.classList.remove('hidden');
 
   abortGameBtn.classList.add('hidden');
+  uiThemeSelect.classList.remove('hidden');
 
   // Highscore prüfen und ggf. speichern (ohne Namen)
-  updateHighscoreIfNeeded(elapsed, moves, state.gameKey, state.themeKey);
+  updateHighscoreIfNeeded(elapsed, moves, state.gameKey, state.themeKey, state.merkphase);
 
   // Ergebnisse aktualisieren (ohne Speichern-Button)
   updateHighscoreDisplay();
+
+  fireConfetti();
+  sfx.win();
+
 }
 
-function updateHighscoreIfNeeded(elapsed, moves, gameKey, themeKey) {
-  const key = `${gameKey}_${themeKey}`;
+function updateHighscoreIfNeeded(elapsed, moves, gameKey, themeKey, merkphase) {
+  const key = getHighscoreKey(gameKey, themeKey, merkphase);
   const hs = getHighscores();
   const current = hs[key];
   if (!current || elapsed < current.elapsed || (elapsed === current.elapsed && moves < current.moves)) {
@@ -1547,15 +2105,16 @@ saveScoreBtn.addEventListener('click', () => {
   const moves = state.moves;
   const game = state.gameKey;
   const theme = state.themeKey;
+  const merkphase = state.merkphase;
 
   const results = getResults();
-  results.unshift({ name, timestamp: Date.now(), elapsed, moves, game, theme });
+  results.unshift({ name, timestamp: Date.now(), elapsed, moves, game, theme, merkphase });
   saveResults(results);
   renderResults();
   updateHighscoreDisplay();
 
   // Highscore erneut prüfen (falls Name eingegeben)
-  updateHighscoreIfNeeded(elapsed, moves, game, theme);
+  updateHighscoreIfNeeded(elapsed, moves, game, theme, merkphase);
   updateHighscoreDisplay();
 
   endGamePanel.classList.add('hidden');
@@ -1569,6 +2128,8 @@ saveScoreBtn.addEventListener('click', () => {
   if (state.timerInterval) clearInterval(state.timerInterval);
   state.startTime = null;
   abortGameBtn.classList.add('hidden');
+  // NEU: Peek-Button ausblenden
+  updatePeekButton();
 });
 
 // ==================== THEMA ERSTELLEN / BEARBEITEN ====================
@@ -1720,10 +2281,14 @@ async function addImagesFromFiles(files) {
     return;
   }
 
-  // Formatvalidierung
+  // Format- und Größenvalidierung
   for (const file of files) {
     if (!VALID_TYPES.includes(file.type)) {
       uploadErrors.textContent = `Ungültiges Format: ${file.name}. Nur webp, png, jpg.`;
+      return;
+    }
+    if (file.size > 15 * 1024 * 1024) {
+      uploadErrors.textContent = `"${file.name}" ist zu groß (max. 15 MB).`;
       return;
     }
   }
@@ -1940,6 +2505,14 @@ startBtn.addEventListener('click', () => {
   startGame();
 });
 
+// NEU: Peek-Button
+peekBtn.addEventListener('click', usePeek);
+
+// Merkphase-Schalter – Highscore-Anzeige anpassen
+merkphaseToggle.addEventListener('change', () => {
+  updateHighscoreDisplay();
+});
+
 // ==================== INIT ====================
 async function init() {
   try {
@@ -1988,12 +2561,29 @@ init();
   // ==================== SPIEL ABBRECHEN ====================
 function abortGame() {
   if (!state.gameActive) return;
-//   if (!confirm('Spiel wirklich abbrechen? Das aktuelle Ergebnis wird nicht gespeichert.')) return;
+
+  // NEU: Deal-Animation aufräumen
+  if (state.dealTimer) { clearTimeout(state.dealTimer); state.dealTimer = null; }
+  state.dealing = false;
+  gameBoard.classList.remove('dealing-active');
+  dealHint.classList.add('hidden');
+  Array.from(gameBoard.children).forEach(el => el.classList.remove('dealing', 'deal-in'));
 
   if (state.timerInterval) {
     clearInterval(state.timerInterval);
     state.timerInterval = null;
   }
+  // Merkphase-Timer aufräumen
+  if (state.memorizeTimer) { clearTimeout(state.memorizeTimer); state.memorizeTimer = null; }
+  if (state.memorizeInterval) { clearInterval(state.memorizeInterval); state.memorizeInterval = null; }
+  merkHint.classList.add('hidden');
+
+  // NEU: Peek aufräumen
+  if (state.peekTimer) { clearTimeout(state.peekTimer); state.peekTimer = null; }
+  state.peekActive = false;
+  state.peeksLeft = 0;
+  peekHint.classList.add('hidden');
+
   state.startTime = null;
   state.elapsed = 0;
   state.gameActive = false;
@@ -2015,6 +2605,7 @@ function abortGame() {
   }
   validateThemeAndGame();
   updateHighscoreDisplay();
+  updatePeekButton();
 }
 
 abortGameBtn.addEventListener('click', abortGame);
