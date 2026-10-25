@@ -2598,6 +2598,7 @@ function abortGame() {
   abortGameBtn.classList.add('hidden');
   endGamePanel.classList.add('hidden');
   setupPanel.classList.remove('hidden');
+  uiThemeSelect.classList.remove('hidden');
 
   gameSelect.value = state.gameKey;
   if (themeSelect.querySelector(`option[value="${state.themeKey}"]`)) {
