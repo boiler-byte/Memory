@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <!-- Voller Hintergrund, OS legt die Maske darüber -->
+  <rect width="512" height="512" fill="#0b0e14"/>
+
+  <g transform="translate(256 256) scale(0.85) translate(-256 -256)">
+    <rect x="72" y="128" width="168" height="256" rx="24"
+          fill="#1e2632" stroke="#2d3f4e" stroke-width="8"/>
+    <circle cx="156" cy="256" r="48" fill="none" stroke="#4e6b7c" stroke-width="10"/>
+    <circle cx="156" cy="256" r="18" fill="#4e6b7c"/>
+
+    <rect x="272" y="128" width="168" height="256" rx="24"
+          fill="#1e2632" stroke="#5f9ea0" stroke-width="8"/>
+    <path d="M 356 184
+             L 372 233 L 424 234 L 383 265 L 398 314
+             L 356 284 L 314 314 L 329 265 L 288 234 L 340 233 Z"
+          fill="#5f9ea0"/>
+  </g>
+</svg>

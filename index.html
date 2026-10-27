@@ -8,12 +8,13 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Memory">
 <link rel="apple-touch-icon" href="icons/icon-192.png">
+<link rel="icon" type="image/svg+xml" href="icons/icon.svg">
 
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Memory 2026</title>
 <link rel="stylesheet" href="css/bootstrap-icons.min.css">
-<script src="jszip.min.js"></script>
+<script src="js/jszip.min.js"></script>
 <style>
 
 @font-face {
@@ -221,6 +222,20 @@ button:disabled {
     filter: grayscale(1);
     opacity: 0.5;
 }
+/* Am Spielende: alle Matches wieder farbig */
+.board.game-won .card.matched .card-front {
+  filter: none;
+  opacity: 1;
+}
+.board.game-won .card.matched {
+  box-shadow: 0 0 0 2px var(--ui-accent, #5f9ea0),
+              0 0 18px rgba(95, 158, 160, 0.55);
+}
+/* Sanfter Farb-Fade für die Front */
+.card .card-front {
+  transition: filter 0.6s ease, opacity 0.6s ease;
+}
+
 .card .card-front, .card .card-back {
   position: absolute;
   inset: 0;
@@ -724,7 +739,7 @@ body[data-ui-theme="glassmorphism"] {
     font-family: 'Valeska';
     letter-spacing: 0.1rem;
     font-weight: normal;
-    font-size:1.4rem;
+    font-size:1.2rem;
   }
 }
 
@@ -774,6 +789,10 @@ body[data-ui-theme="minimal"] {
   body[data-ui-theme="glassmorphism"] {
     h1 { font-size: 4rem; }
     h3 { font-size: 1.6rem; }
+    button, button span { font-size:0.8rem; }
+  }
+  body[data-ui-theme="retro"] {
+    button, button span { font-size:1.2rem; }
   }
 }
 
@@ -1003,6 +1022,161 @@ body:not([data-ui-theme="default"]) .peek-badge {
   color: var(--ui-bg);
 }
 
+
+/* ---------- Theme-Editor: Ladeanzeige ---------- */
+.editor-loading {
+  position: absolute;
+  inset: 0;
+  border-radius: 2rem;
+  background: rgba(11, 14, 20, 0.72);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  z-index: 20;
+  color: var(--ui-text, #eef2f5);
+  font-size: 0.95rem;
+  font-weight: 500;
+  padding: 1rem;
+  text-align: center;
+}
+.editor-loading-spinner {
+  width: 48px;
+  height: 48px;
+  border: 4px solid color-mix(in srgb, var(--ui-accent, #5f9ea0) 25%, transparent);
+  border-top-color: var(--ui-accent, #5f9ea0);
+  border-radius: 50%;
+  animation: editorSpin 0.8s linear infinite;
+}
+@keyframes editorSpin {
+  to { transform: rotate(360deg); }
+}
+
+
+
+/* ---------- Slideshow ---------- */
+.slideshow-overlay {
+  position: fixed; inset: 0;
+  background: rgba(0, 0, 0, 0.95);
+  z-index: 5000;
+  display: flex; align-items: center; justify-content: center;
+  overflow: hidden; user-select: none;
+}
+.slideshow-overlay.hidden { display: none !important; }
+.slideshow-stage { position: absolute; inset: 0; pointer-events: none; }
+.slideshow-layer {
+  position: absolute; inset: 0;
+  display: flex; align-items: center; justify-content: center;
+  padding: 4rem 2rem 6rem;
+  opacity: 0;
+  transition: opacity 0.9s ease;
+  will-change: opacity;
+}
+.slideshow-layer.active { opacity: 1; }
+.slideshow-layer img {
+  width: 600px;
+  max-width: 100%; max-height: 100%;
+  object-fit: contain;
+  border-radius: 0.6rem;
+  box-shadow: 0 25px 80px rgba(0, 0, 0, 0.75);
+  transform-origin: center;
+  animation: ssKenBurns 4.4s ease-out forwards;
+  will-change: transform;
+}
+@keyframes ssKenBurns {
+  0%   { transform: scale(1); }
+  100% { transform: scale(1.2); }
+}
+.slideshow-topbar {
+  position: absolute; top: 0; left: 0; right: 0;
+  padding: 1rem 1.5rem;
+  display: flex; align-items: center; gap: 1rem;
+  z-index: 2;
+  background: linear-gradient(to bottom, rgba(0,0,0,0.7), transparent);
+}
+.slideshow-title {
+  flex: 1; color: #fff; font-weight: 600; font-size: 1.1rem;
+  text-shadow: 0 2px 10px rgba(0,0,0,0.9);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.slideshow-counter {
+  color: #fff; font-size: 0.95rem; opacity: 0.9;
+  text-shadow: 0 2px 10px rgba(0,0,0,0.9);
+  font-variant-numeric: tabular-nums;
+}
+.ss-btn {
+  width: 48px; height: 48px; border-radius: 50%;
+  background: rgba(255,255,255,0.12);
+  border: 1px solid rgba(255,255,255,0.3);
+  color: #fff;
+  display: inline-flex; align-items: center; justify-content: center;
+  font-size: 1.35rem; cursor: pointer; padding: 0; line-height: 1;
+  backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+  transition: background 0.15s, transform 0.15s;
+  flex-shrink: 0;
+}
+.ss-btn:hover  { background: rgba(255,255,255,0.28); transform: scale(1.06); }
+.ss-btn:active { transform: scale(0.94); }
+.ss-btn.ss-close {
+  background: rgba(180, 40, 60, 0.4);
+  border-color: rgba(255, 120, 140, 0.55);
+}
+.ss-btn.ss-close:hover { background: rgba(210, 55, 80, 0.65); }
+.slideshow-controls {
+  position: absolute; bottom: 2.5rem; left: 50%;
+  transform: translateX(-50%);
+  display: flex; gap: 0.7rem; z-index: 2;
+  padding: 0.5rem; border-radius: 50px;
+  background: rgba(0,0,0,0.35);
+  backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255,255,255,0.1);
+}
+.slideshow-progress {
+  position: absolute; bottom: 0; left: 0; right: 0;
+  height: 4px; background: rgba(255,255,255,0.08); z-index: 2;
+}
+.slideshow-progress-bar {
+  height: 100%; width: 0;
+  background: #5f9ea0;
+  box-shadow: 0 0 12px #5f9ea0;
+}
+#openSlideshowBtn, #presentGameImagesBtn {
+  background-color: inherit;
+  font-size:0.7rem;
+  display: block;
+}
+#openCreateThemeBtn { background-color: inherit; }
+
+body[data-ui-theme="minimal"] {
+  #openSlideshowBtn, #presentGameImagesBtn, #openCreateThemeBtn { color: #253449; }
+}
+
+
+@keyframes ssProgress {
+  from { width: 0%; }
+  to   { width: 100%; }
+}
+
+/* End-Game-Buttons */
+.end-game-actions {
+  display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap;
+  margin-top: 0.5rem;
+}
+
+@media (max-width: 600px) {
+  .slideshow-layer { padding: 3rem 0.4rem 5rem; }
+  .slideshow-topbar { padding: 0.7rem 0.8rem; gap: 0.5rem; }
+  .slideshow-title { font-size: 0.9rem; }
+  .slideshow-counter { font-size: 0.8rem; }
+  .ss-btn { width: 40px; height: 40px; font-size: 1.1rem; }
+  .slideshow-controls { bottom: 1.5rem; gap: 0.5rem; }
+}
+
+
+
 @media (max-width: 600px) {
   .peek-btn { width: 44px; height: 44px; }
   .peek-btn i { font-size: 1.25rem; }
@@ -1076,6 +1250,10 @@ body:not([data-ui-theme="default"]) .peek-badge {
     <div class="button-row">
       <button id="startGameBtn"><i class="bi bi-play-fill"></i> Spiel starten</button>
       <button id="openCreateThemeBtn"><i class="bi bi-plus-circle"></i> Thema erstellen</button>
+      <button id="openSlideshowBtn"><i class="bi bi-play-btn"></i> Präsentation</button>
+      <button id="installPwaBtn" class="hidden" title="Spiel auf diesem Gerät installieren">
+        <i class="bi bi-download"></i> Spiel installieren
+      </button>
     </div>
     <div class="hint-error" id="themeWarning"></div>
   </div>
@@ -1103,7 +1281,11 @@ body:not([data-ui-theme="default"]) .peek-badge {
     <h2><i class="bi bi-flag"></i> Geschafft!</h2>
     <p id="endGameStats"></p>
     <input type="text" id="playerNameInput" placeholder="Dein Name" value="Memory" maxlength="30">
-    <button id="saveScoreBtn"><i class="bi bi-save"></i> Ergebnis speichern</button>
+    <div class="end-game-actions">
+      <button id="saveScoreBtn"><i class="bi bi-save"></i> Ergebnis speichern</button>
+      <!-- Präsentation der einzigartigen Spielbilder -->
+      <button id="presentGameImagesBtn" style="font-size:1rem"><i class="bi bi-images"></i></button>
+    </div>
   </div>
 
   <!-- Ergebnis- und Highscorebereich -->
@@ -1133,7 +1315,9 @@ body:not([data-ui-theme="default"]) .peek-badge {
       <div class="theme-editor-toolbar">
         <button type="button" id="addImagesBtn"><i class="bi bi-plus-lg"></i> Bilder</button>
         <button type="button" class="paste-btn" id="pasteImagesBtn"><i class="bi bi-clipboard"></i> Einfügen</button>
-        <input type="file" id="themeFilesInput" accept="image/webp,image/png,image/jpeg,.zip,application/zip" multiple class="hidden">
+        <input type="file" id="themeFilesInput"
+       accept="image/webp,image/png,image/jpeg,image/bmp,image/gif,.webp,.png,.jpg,.jpeg,.bmp,.gif,.zip,application/zip"
+       multiple class="hidden">
       </div>
     </div>
     <div class="upload-errors" id="uploadErrors"></div>
@@ -1155,6 +1339,11 @@ body:not([data-ui-theme="default"]) .peek-badge {
         <h3>Bilder hinzufügen</h3>
         <p>Dateien hier ablegen</p>
       </div>
+    </div>
+
+    <div id="editorLoading" class="editor-loading hidden">
+      <div class="editor-loading-spinner"></div>
+      <span id="editorLoadingText">Verarbeite…</span>
     </div>
   </div>
 </div>
@@ -1717,6 +1906,7 @@ async function startGame() {
   // UI umschalten
   setupPanel.classList.add('hidden');
   endGamePanel.classList.add('hidden');
+  gameBoard.classList.remove('game-won');   // NEU
   renderBoard(rows, cols, game.maxWidth ?? null);
   // Timer startet beim ersten Aufdecken
 
@@ -2038,9 +2228,7 @@ const sfx = {
   match:    () => { beep(660, 0.10); setTimeout(() => beep(880, 0.15), 80); },
   mismatch: () => beep(180, 0.18, 'sawtooth', 0.025),
   win:      () => [523, 659, 784, 1047].forEach((f, i) => setTimeout(() => beep(f, 0.22), i * 110)),
-  // NEU: Deal-Sound – sehr leise, kurzer Tick
   deal:     () => beep(320 + Math.random() * 140, 0.035, 'triangle', 0.018),
-  // NEU: Peek-Sound
   peek:     () => { beep(760, 0.09); setTimeout(() => beep(1140, 0.12), 80); },
 };
 function fireConfetti() {
@@ -2089,6 +2277,11 @@ async function endGame() {
   fireConfetti();
   sfx.win();
 
+  // NEU: Nach dem letzten Match kurz warten, dann Farben freigeben
+  setTimeout(() => {
+    if (!state.gameActive) gameBoard.classList.add('game-won');
+  }, 450);
+
 }
 
 function updateHighscoreIfNeeded(elapsed, moves, gameKey, themeKey, merkphase) {
@@ -2123,6 +2316,7 @@ saveScoreBtn.addEventListener('click', () => {
   endGamePanel.classList.add('hidden');
   setupPanel.classList.remove('hidden');
   gameBoard.innerHTML = '';
+  gameBoard.classList.remove('game-won'); 
   // Timer zurücksetzen
   state.elapsed = 0;
   timerDisplay.textContent = '0:00';
@@ -2133,520 +2327,6 @@ saveScoreBtn.addEventListener('click', () => {
   abortGameBtn.classList.add('hidden');
   // NEU: Peek-Button ausblenden
   updatePeekButton();
-});
-
-// ==================== THEMA ERSTELLEN / BEARBEITEN ====================
-const createModal = document.getElementById('createThemeModal');
-const themeNameInput = document.getElementById('themeNameInput');
-const themeFilesInput = document.getElementById('themeFilesInput');
-const uploadErrors = document.getElementById('uploadErrors');
-const saveThemeBtn = document.getElementById('saveThemeBtn');
-const closeModalBtn = document.getElementById('closeModalBtn');
-const openCreateThemeBtn = document.getElementById('openCreateThemeBtn');
-const editThemeBtn = document.getElementById('editThemeBtn');
-const deleteThemeBtnInModal = document.getElementById('deleteThemeBtn');
-const exportThemeBtn = document.getElementById('exportThemeBtn');
-const themeModalTitle = document.getElementById('themeModalTitle');
-const themeEditorGrid = document.getElementById('themeEditorGrid');
-const themeEditorCount = document.getElementById('themeEditorCount');
-const addImagesBtn = document.getElementById('addImagesBtn');
-const pasteImagesBtn = document.getElementById('pasteImagesBtn');
-
-// Editor-State
-let editorState = {
-  mode: 'create',        // 'create' | 'edit'
-  editThemeKey: null,    // bei edit: der Key des zu bearbeitenden Themes
-  images: [],            // [{ name, data (dataURL), isNew }]
-  existingImages: [],    // Originalbilder (nur bei edit), um nicht-benötigte nicht zu löschen
-};
-
-const MAX_IMAGES = 72;
-const THUMB_MAX_WIDTH = 250;
-
-// ---------- Öffnen: Neues Thema ----------
-openCreateThemeBtn.addEventListener('click', () => {
-  openEditor('create');
-});
-
-// ---------- Öffnen: Bearbeiten ----------
-editThemeBtn.addEventListener('click', async () => {
-  const themeKey = themeSelect.value;
-  const customThemes = getCustomThemes();
-  if (!customThemes[themeKey]) {
-    alert('Nur Custom-Themes können bearbeitet werden.');
-    return;
-  }
-  openEditor('edit', themeKey);
-});
-
-async function openEditor(mode, themeKey = null) {
-  uploadErrors.textContent = '';
-  editorState.mode = mode;
-  editorState.editThemeKey = themeKey;
-  editorState.images = [];
-  editorState.existingImages = [];
-
-  if (mode === 'create') {
-    themeModalTitle.textContent = 'Neues Thema erstellen';
-    themeNameInput.value = '';
-    deleteThemeBtnInModal.style.display = 'none';
-    exportThemeBtn.style.display = 'none';
-  } else {
-    const customThemes = getCustomThemes();
-    const meta = customThemes[themeKey];
-    if (!meta) { alert('Thema nicht gefunden.'); return; }
-    themeModalTitle.textContent = 'Thema bearbeiten';
-    themeNameInput.value = meta.label;
-    deleteThemeBtnInModal.style.display = 'inline-flex';
-    exportThemeBtn.style.display = 'inline-flex';
-
-    // Vorhandene Bilder laden
-    let stored = [];
-    try { stored = await getThemeImages(themeKey); } catch (_) {}
-    editorState.existingImages = stored.map(item => ({ name: item.name, data: item.data }));
-    editorState.images = stored.map(item => ({
-      name: item.name,
-      data: item.data,
-      isNew: false,
-    }));
-  }
-
-  renderEditorGrid();
-  createModal.classList.remove('hidden');
-}
-
-// ---------- Schließen ----------
-function closeEditor() {
-  createModal.classList.add('hidden');
-  editorState.images = [];
-  editorState.existingImages = [];
-  editorState.editThemeKey = null;
-}
-closeModalBtn.addEventListener('click', closeEditor);
-
-// ---------- Hinzufügen über Button ----------
-addImagesBtn.addEventListener('click', () => themeFilesInput.click());
-
-themeFilesInput.addEventListener('change', async () => {
-  const files = Array.from(themeFilesInput.files);
-  themeFilesInput.value = ''; // zurücksetzen, damit gleiche Datei erneut wählbar
-  await addImagesFromFiles(files);
-});
-
-// ---------- Hinzufügen über Zwischenablage-Button ----------
-pasteImagesBtn.addEventListener('click', async () => {
-  try {
-    const items = await navigator.clipboard.read();
-    const files = [];
-    for (const item of items) {
-      for (const type of item.types) {
-        if (type.startsWith('image/')) {
-          const blob = await item.getType(type);
-          const ext = type.split('/')[1] || 'png';
-          files.push(new File([blob], `clipboard.${ext}`, { type: blob.type }));
-        }
-      }
-    }
-    if (files.length === 0) {
-      uploadErrors.textContent = 'Keine Bilder in der Zwischenablage gefunden.';
-      return;
-    }
-    await addImagesFromFiles(files);
-  } catch (err) {
-    uploadErrors.textContent = 'Zwischenablage konnte nicht gelesen werden (Berechtigung?).';
-  }
-});
-
-// ---------- Globale Strg+V / Cmd+V-Unterstützung ----------
-document.addEventListener('paste', async (e) => {
-  if (createModal.classList.contains('hidden')) return;
-  const items = Array.from(e.clipboardData?.items || []);
-  const files = [];
-  for (const item of items) {
-    if (item.kind === 'file' && item.type.startsWith('image/')) {
-      const file = item.getAsFile();
-      if (file) files.push(file);
-    }
-  }
-  if (files.length > 0) {
-    e.preventDefault();
-    await addImagesFromFiles(files);
-  }
-});
-
-// ---------- Validierung + Umwandlung ----------
-const VALID_TYPES = ['image/webp', 'image/png', 'image/jpeg'];
-const MAX_FILE_SIZE = 15 * 1024 * 1024; // 15 MB pro Bild
-
-function isZipFile(file) {
-  return file.type === 'application/zip'
-      || file.type === 'application/x-zip-compressed'
-      || /\.zip$/i.test(file.name);
-}
-
-function dataURLMime(dataURL) {
-  const m = /^data:([^;,]+)/.exec(dataURL || '');
-  return m ? m[1] : 'image/png';
-}
-
-function mimeToExt(mime) {
-  if (/jpe?g/i.test(mime)) return 'jpg';
-  if (/webp/i.test(mime)) return 'webp';
-  if (/png/i.test(mime))  return 'png';
-  return 'png';
-}
-
-function sanitizeFileName(name) {
-  return (name || 'theme')
-    .replace(/[<>:"/\\|?*\x00-\x1f]/g, '_')
-    .replace(/^\.+/, '')
-    .trim() || 'theme';
-}
-
-function downloadBlob(blob, filename) {
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = filename;
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-  setTimeout(() => URL.revokeObjectURL(url), 1500);
-}
-
-// Liest Bilder (und theme.json-Metadaten) aus einer ZIP-Datei
-async function extractFromZip(file) {
-  const zip = await JSZip.loadAsync(file);
-  const images = [];
-  let metaLabel = null;
-  const tasks = [];
-
-  zip.forEach((path, entry) => {
-    if (entry.dir) return;
-    if (path.startsWith('__MACOSX/')) return;
-    const baseName = path.split('/').pop() || '';
-    if (!baseName || baseName.startsWith('._')) return;
-
-    if (baseName.toLowerCase() === 'theme.json') {
-      tasks.push(entry.async('string').then(txt => {
-        try {
-          const obj = JSON.parse(txt);
-          if (obj && typeof obj.label === 'string') metaLabel = obj.label;
-        } catch (_) {}
-      }));
-      return;
-    }
-
-    if (!/\.(webp|png|jpe?g)$/i.test(baseName)) return;
-
-    tasks.push(entry.async('blob').then(blob => {
-      const ext = baseName.split('.').pop().toLowerCase();
-      const mime = (ext === 'jpg' || ext === 'jpeg') ? 'image/jpeg' : `image/${ext}`;
-      images.push(new File([blob], baseName, { type: mime }));
-    }));
-  });
-
-  await Promise.all(tasks);
-  images.sort((a, b) => a.name.localeCompare(b.name, undefined, { numeric: true }));
-  return { images, metaLabel };
-}
-
-async function addImagesFromFiles(files) {
-  uploadErrors.textContent = '';
-  if (!files || files.length === 0) return;
-
-  // ZIPs entpacken
-  const expanded = [];
-  let zipMetaLabel = null;
-  for (const file of files) {
-    if (isZipFile(file)) {
-      if (file.size > 200 * 1024 * 1024) {
-        uploadErrors.textContent = `"${file.name}" ist zu groß (max. 200 MB pro ZIP).`;
-        return;
-      }
-      try {
-        const { images, metaLabel } = await extractFromZip(file);
-        if (images.length === 0) {
-          uploadErrors.textContent = `"${file.name}" enthält keine unterstützten Bilder (webp/png/jpg).`;
-          return;
-        }
-        if (metaLabel) zipMetaLabel = metaLabel;
-        expanded.push(...images);
-      } catch (err) {
-        uploadErrors.textContent = `ZIP "${file.name}" konnte nicht entpackt werden: ${err.message || err}`;
-        return;
-      }
-    } else {
-      expanded.push(file);
-    }
-  }
-
-  if (expanded.length === 0) return;
-
-  // Kapazitätsprüfung
-  if (editorState.images.length + expanded.length > MAX_IMAGES) {
-    uploadErrors.textContent =
-      `Maximal ${MAX_IMAGES} Bilder pro Thema (${editorState.images.length} vorhanden, ${expanded.length} neu).`;
-    return;
-  }
-
-  // Format- und Größenvalidierung
-  for (const file of expanded) {
-    if (!VALID_TYPES.includes(file.type)) {
-      uploadErrors.textContent = `Ungültiges Format: ${file.name}. Nur webp, png, jpg.`;
-      return;
-    }
-    if (file.size > MAX_FILE_SIZE) {
-      uploadErrors.textContent = `"${file.name}" ist zu groß (max. 15 MB).`;
-      return;
-    }
-  }
-
-  // Verarbeitung: alle nacheinander (Reihenfolge wichtig für Konsistenz)
-  for (const file of expanded) {
-    try {
-      const dataURL = await readFileAsDataURL(file);
-      const processed = await makeThumbDataURL(dataURL);
-      editorState.images.push({
-        name: String(editorState.images.length + 1),
-        data: processed,
-        isNew: true,
-      });
-    } catch (err) {
-      uploadErrors.textContent = `Fehler beim Verarbeiten von ${file.name}: ${err.message}`;
-      return;
-    }
-  }
-
-  // Thema-Namen aus theme.json übernehmen, falls im Create-Modus noch leer
-  if (zipMetaLabel && editorState.mode === 'create' && !themeNameInput.value.trim()) {
-    themeNameInput.value = zipMetaLabel.slice(0, 20);
-  }
-
-  renderEditorGrid();
-}
-
-// Wandelt ein Bild in ein webp-Thumb mit max. 250px Breite um.
-// Ist die Breite <= 250, wird das Original zurückgegeben.
-function makeThumbDataURL(dataURL) {
-  return new Promise((resolve, reject) => {
-    const img = new Image();
-    img.onload = () => {
-      if (img.naturalWidth <= THUMB_MAX_WIDTH) {
-        // bereits klein genug -> Originaldaten unverändert
-        resolve(dataURL);
-        return;
-      }
-      const scale = THUMB_MAX_WIDTH / img.naturalWidth;
-      const w = THUMB_MAX_WIDTH;
-      const h = Math.max(1, Math.round(img.naturalHeight * scale));
-      const canvas = document.createElement('canvas');
-      canvas.width = w;
-      canvas.height = h;
-      const ctx = canvas.getContext('2d');
-      ctx.drawImage(img, 0, 0, w, h);
-      try {
-        const out = canvas.toDataURL('image/webp', 0.85);
-        // Fallback falls Browser kein webp liefert
-        if (!out.startsWith('data:image/webp')) {
-          resolve(dataURL);
-        } else {
-          resolve(out);
-        }
-      } catch (_) {
-        resolve(dataURL);
-      }
-    };
-    img.onerror = () => reject(new Error('Bild konnte nicht geladen werden'));
-    img.src = dataURL;
-  });
-}
-
-// ---------- Editor-Vorschau ----------
-function renderEditorGrid() {
-  themeEditorGrid.innerHTML = '';
-  if (editorState.images.length === 0) {
-    themeEditorGrid.innerHTML = '<div class="theme-editor-empty">Noch keine Bilder hinzugefügt.</div>';
-  } else {
-    editorState.images.forEach((img, idx) => {
-      const item = document.createElement('div');
-      item.className = 'theme-editor-item';
-      item.title = 'Klicken zum Löschen';
-      const im = document.createElement('img');
-      im.src = img.data;
-      im.alt = `Bild ${idx + 1}`;
-      item.appendChild(im);
-      item.addEventListener('click', () => {
-        editorState.images.splice(idx, 1);
-        renderEditorGrid();
-      });
-      themeEditorGrid.appendChild(item);
-    });
-  }
-  themeEditorCount.textContent = `${editorState.images.length} / ${MAX_IMAGES} Bilder`;
-}
-
-// ---------- Speichern ----------
-saveThemeBtn.addEventListener('click', async () => {
-  uploadErrors.textContent = '';
-  const name = themeNameInput.value.trim();
-  if (!name || name.length < 1 || name.length > 20) {
-    uploadErrors.textContent = 'Name muss 1–20 Zeichen lang sein.';
-    return;
-  }
-
-  if (editorState.images.length < 1) {
-    uploadErrors.textContent = 'Mindestens 1 Bild erforderlich.';
-    return;
-  }
-  if (editorState.images.length > MAX_IMAGES) {
-    uploadErrors.textContent = `Maximal ${MAX_IMAGES} Bilder erlaubt.`;
-    return;
-  }
-
-  const customThemes = getCustomThemes();
-
-  // Namen-Eindeutigkeit prüfen (außer bei sich selbst im Edit-Modus)
-  const isDuplicate = (key, meta) =>
-    meta.label === name && !(editorState.mode === 'edit' && key === editorState.editThemeKey);
-
-  if (THEMES[name] || Object.entries(customThemes).some(([k, v]) => isDuplicate(k, v))) {
-    uploadErrors.textContent = 'Name bereits vergeben.';
-    return;
-  }
-
-  // Format bestimmen (alle neuen Bilder sollen webp sein; bestehende ggf. gemischt)
-  // Wir nehmen das Format des ersten Bildes, aber da wir webp-thumbs erzeugen,
-  // speichern wir webp als Format-Metadatum.
-  // Bestehende Bilder (isNew === false) können andere Formate haben – das ist ok,
-  // da sie als dataURL gespeichert sind. Für die Anzeige irrelevant.
-  const format = 'webp';
-
-  let themeKey = editorState.editThemeKey;
-  if (editorState.mode === 'create') {
-    themeKey = 'custom_' + Date.now() + '_' + Math.random().toString(36).substring(2, 8);
-    while (THEMES[themeKey] || customThemes[themeKey]) {
-      themeKey = 'custom_' + Date.now() + '_' + Math.random().toString(36).substring(2, 8);
-    }
-  }
-
-  // Bilder serialisieren (Reihenfolge beibehalten, Namen neu nummerieren)
-  const imageDataArray = editorState.images.map((img, i) => ({
-    name: String(i + 1),
-    data: img.data,
-  }));
-
-  try {
-    await storeThemeImages(themeKey, imageDataArray);
-  } catch (e) {
-    uploadErrors.textContent = 'Fehler beim Speichern der Bilder (IndexedDB).';
-    return;
-  }
-
-  customThemes[themeKey] = {
-    label: name,
-    custom: true,
-    images: imageDataArray.length,
-    format: format,
-  };
-  saveCustomThemes(customThemes);
-
-  // UI aktualisieren
-  populateThemeSelect();
-  themeSelect.value = themeKey;
-  state.themeKey = themeKey;
-  validateThemeAndGame();
-  updateHighscoreDisplay();
-  renderThemePreview();
-
-  closeEditor();
-});
-
-function readFileAsDataURL(file) {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => resolve(reader.result);
-    reader.onerror = () => reject(reader.error);
-    reader.readAsDataURL(file);
-  });
-}
-
-// ==================== THEMA ALS ZIP EXPORTIEREN ====================
-async function exportThemeAsZip() {
-  uploadErrors.textContent = '';
-
-  if (editorState.images.length === 0) {
-    uploadErrors.textContent = 'Keine Bilder zum Exportieren.';
-    return;
-  }
-
-  const rawName = themeNameInput.value.trim()
-    || (getCustomThemes()[editorState.editThemeKey]?.label)
-    || 'theme';
-  const safeName = sanitizeFileName(rawName);
-
-  exportThemeBtn.disabled = true;
-  const originalHtml = exportThemeBtn.innerHTML;
-  exportThemeBtn.innerHTML = '<i class="bi bi-hourglass-split"></i> Exportiere…';
-
-  try {
-    const zip = new JSZip();
-    const folder = zip.folder(safeName);
-
-    editorState.images.forEach((img, i) => {
-      const base64 = (img.data.split(',')[1]) || '';
-      const ext = mimeToExt(dataURLMime(img.data));
-      folder.file(`${String(i + 1).padStart(2, '0')}.${ext}`, base64, { base64: true });
-    });
-
-    folder.file('theme.json', JSON.stringify({
-      label: rawName,
-      format: 'webp',
-      images: editorState.images.length,
-      exportedAt: new Date().toISOString(),
-      app: 'Memory',
-    }, null, 2));
-
-    const blob = await zip.generateAsync({ type: 'blob', compression: 'DEFLATE' });
-    downloadBlob(blob, `${safeName}.zip`);
-  } catch (err) {
-    uploadErrors.textContent = 'Fehler beim Export: ' + (err.message || err);
-  } finally {
-    exportThemeBtn.disabled = false;
-    exportThemeBtn.innerHTML = originalHtml;
-  }
-}
-
-exportThemeBtn.addEventListener('click', exportThemeAsZip);
-
-// ==================== THEMA LÖSCHEN (im Modal) ====================
-deleteThemeBtnInModal.addEventListener('click', async () => {
-  if (editorState.mode !== 'edit' || !editorState.editThemeKey) return;
-  const themeKey = editorState.editThemeKey;
-  const customThemes = getCustomThemes();
-  if (!customThemes[themeKey]) {
-    alert('Thema nicht gefunden.');
-    return;
-  }
-  if (!confirm(`Thema "${customThemes[themeKey].label}" wirklich löschen?`)) return;
-
-  try {
-    await deleteThemeImages(themeKey);
-  } catch (e) {
-    alert('Fehler beim Löschen der Bilder: ' + e.message);
-    return;
-  }
-  delete customThemes[themeKey];
-  saveCustomThemes(customThemes);
-
-  if (state.themeKey === themeKey) {
-    state.themeKey = Object.keys(THEMES)[0] || '';
-  }
-  populateThemeSelect();
-  updateHighscoreDisplay();
-  renderResults();
-  renderThemePreview();
-  closeEditor();
 });
 
 // ==================== EVENT LISTENER ====================
@@ -2760,6 +2440,7 @@ function abortGame() {
   abortGameBtn.classList.add('hidden');
   endGamePanel.classList.add('hidden');
   setupPanel.classList.remove('hidden');
+  gameBoard.classList.remove('game-won');
   uiThemeSelect.classList.remove('hidden');
 
   gameSelect.value = state.gameKey;
@@ -2790,6 +2471,7 @@ window.addEventListener('resize', () => {
   const setupDropHint    = document.getElementById('setupDropHint');
   const modalDropOverlay = document.getElementById('modalDropOverlay');
   const setupPanelEl     = document.getElementById('setupPanel');
+  const createModalEl    = document.getElementById('createThemeModal');
 
   // Zähler, um verschachtelte dragenter/dragleave zu handhaben
   let setupDragCounter = 0;
@@ -2805,7 +2487,7 @@ window.addEventListener('resize', () => {
   setupPanelEl.addEventListener('dragenter', (e) => {
     if (!isFileDrag(e)) return;
     // Kein Setup-Drop, wenn der Editor offen ist
-    if (!createModal.classList.contains('hidden')) return;
+    if (!createModalEl.classList.contains('hidden')) return;
     e.preventDefault();
     setupDragCounter++;
     updateSetupDropZoneText();
@@ -2814,7 +2496,7 @@ window.addEventListener('resize', () => {
 
   setupPanelEl.addEventListener('dragover', (e) => {
     if (!isFileDrag(e)) return;
-    if (!createModal.classList.contains('hidden')) return;
+    if (!createModalEl.classList.contains('hidden')) return;
     e.preventDefault();
     e.dataTransfer.dropEffect = 'copy';
   });
@@ -2839,14 +2521,17 @@ window.addEventListener('resize', () => {
     const customThemes = getCustomThemes();
     const currentThemeKey = themeSelect.value;
 
+    const editor = window.MemoryThemeEditor;
+    if (!editor) return;
+
     if (customThemes[currentThemeKey]) {
       // Custom-Thema ausgewählt -> Bearbeiten-Dialog öffnen und Bilder aufnehmen
-      await openEditor('edit', currentThemeKey);
-      await addImagesFromFiles(files);
+      await editor.openEditor('edit', currentThemeKey);
+      await editor.addImagesFromFiles(files);
     } else {
       // Default-Thema -> Neu-erstellen-Dialog öffnen
-      await openEditor('create');
-      await addImagesFromFiles(files);
+      await editor.openEditor('create');
+      await editor.addImagesFromFiles(files);
     }
   });
 
@@ -2865,7 +2550,7 @@ window.addEventListener('resize', () => {
   // ---------- Modal: Drop-Overlay ----------
   // Wir hängen die Listener an das Modal-Content-Element,
   // damit sie nur greifen, wenn der Editor offen ist.
-  const modalContent = createModal.querySelector('.modal-content');
+  const modalContent = createModalEl.querySelector('.modal-content');
 
   modalContent.addEventListener('dragenter', (e) => {
     if (!isFileDrag(e)) return;
@@ -2897,23 +2582,180 @@ window.addEventListener('resize', () => {
     const files = Array.from(e.dataTransfer.files || []);
     if (files.length === 0) return;
 
-    await addImagesFromFiles(files);
+    const editor = window.MemoryThemeEditor;
+    if (editor) {
+      await editor.addImagesFromFiles(files);
+    }
   });
 
   // Beim Schließen/Speichern/Löschen des Modals Overlay zurücksetzen
-  closeModalBtn.addEventListener('click', () => {
+  const closeModalBtnEl = document.getElementById('closeModalBtn');
+  const deleteThemeBtnEl = document.getElementById('deleteThemeBtn');
+  const saveThemeBtnEl = document.getElementById('saveThemeBtn');
+
+  closeModalBtnEl.addEventListener('click', () => {
     modalDragCounter = 0;
     modalDropOverlay.classList.remove('active');
   });
-  deleteThemeBtnInModal.addEventListener('click', () => {
+  deleteThemeBtnEl.addEventListener('click', () => {
     modalDragCounter = 0;
     modalDropOverlay.classList.remove('active');
   });
-  saveThemeBtn.addEventListener('click', () => {
+  saveThemeBtnEl.addEventListener('click', () => {
     modalDragCounter = 0;
     modalDropOverlay.classList.remove('active');
   });
 })();
+
+
+// ==================== SLIDESHOW-HELFER ====================
+// Liefert eine flache Liste aller Bild-Quellen eines Themas (Standard oder Custom)
+async function getThemeImageList(themeKey) {
+  if (THEMES[themeKey]) {
+    const t = THEMES[themeKey];
+    const arr = [];
+    for (let i = 1; i <= t.images; i++) arr.push(`./img/${themeKey}/${i}.${t.format}`);
+    return arr;
+  }
+  const custom = getCustomThemes();
+  if (custom[themeKey]) {
+    try {
+      const stored = await getThemeImages(themeKey);
+      return stored.map(item => item.data);
+    } catch (_) { return []; }
+  }
+  return [];
+}
+
+// Liefert die einzigartigen Bild-Quellen des aktuellen Spiels (ein Bild pro Set)
+function getCurrentGameImages() {
+  if (!state.cards || state.cards.length === 0) return [];
+  const seen = new Set();
+  const arr = [];
+  for (const card of state.cards) {
+    if (!seen.has(card.setIndex)) {
+      seen.add(card.setIndex);
+      arr.push(card.imageSrc);
+    }
+  }
+  return arr;
+}
+
+// Button im Hauptmenü: Präsentation aller Themen-Bilder
+document.getElementById('openSlideshowBtn').addEventListener('click', async () => {
+  if (!window.MemorySlideshow) return;
+  const themeKey = themeSelect.value;
+  const label = getThemeLabel(themeKey) || themeKey;
+  const list = await getThemeImageList(themeKey);
+  if (list.length === 0) {
+    alert('Für dieses Thema sind keine Bilder verfügbar.');
+    return;
+  }
+  window.MemorySlideshow.start(list, `Thema: ${label}`);
+});
+
+// Button im Endgame-Panel: Präsentation der Spielbilder
+document.getElementById('presentGameImagesBtn').addEventListener('click', () => {
+  if (!window.MemorySlideshow) return;
+  const list = getCurrentGameImages();
+  if (list.length === 0) {
+    alert('Keine Bilder aus dem Spiel verfügbar.');
+    return;
+  }
+  window.MemorySlideshow.start(list, 'Deine Spielbilder');
+});
+
+// ==================== EXPORT FÜR THEME-EDITOR ====================
+window.MemoryApp = {
+  getCustomThemes,
+  saveCustomThemes,
+  getThemeImages,
+  storeThemeImages,
+  deleteThemeImages,
+  THEMES,
+  GAMES,
+  populateThemeSelect,
+  validateThemeAndGame,
+  updateHighscoreDisplay,
+  renderResults,
+  renderThemePreview,
+  getAppState: () => state,
+  setAppThemeKey: (key) => { state.themeKey = key; },
+};
+
+
+// ==================== PWA: Service Worker + Installations-Button ====================
+(function initPWA() {
+  const installBtn = document.getElementById('installPwaBtn');
+  if (!installBtn) return;
+
+  // 1) Service Worker registrieren
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker
+        .register('./sw.js')
+        .catch((err) => console.warn('SW-Registrierung fehlgeschlagen:', err));
+    });
+  }
+
+  // 2) Standalone-Erkennung (bereits installiert?)
+  const isStandalone =
+    window.matchMedia('(display-mode: standalone)').matches ||
+    window.navigator.standalone === true;
+
+  if (isStandalone) {
+    installBtn.classList.add('hidden');
+    return;
+  }
+
+  // 3) Android/Chrome/Edge: nativer Install-Prompt
+  let deferredPrompt = null;
+
+  window.addEventListener('beforeinstallprompt', (e) => {
+    e.preventDefault();
+    deferredPrompt = e;
+    installBtn.classList.remove('hidden');
+  });
+
+  installBtn.addEventListener('click', async () => {
+    if (deferredPrompt) {
+      deferredPrompt.prompt();
+      const { outcome } = await deferredPrompt.userChoice;
+      console.log('PWA-Installation:', outcome);
+      deferredPrompt = null;
+      installBtn.classList.add('hidden');
+    } else {
+      // Fallback mit Anleitung (z.B. iOS, Desktop-Firefox)
+      const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) ||
+                    (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+      if (isIOS) {
+        alert('Um das Spiel zu installieren:\n\n' +
+              '1. Tippe unten auf das Teilen-Symbol (□↑)\n' +
+              '2. Wähle „Zum Home-Bildschirm“');
+      } else {
+        alert('Um das Spiel zu installieren, öffne diese Seite in Chrome oder Edge ' +
+              'und wähle „App installieren“ aus dem Browser-Menü.');
+      }
+    }
+  });
+
+  // 4) iOS: Button direkt anzeigen (beforeinstallprompt existiert dort nicht)
+  const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) ||
+                (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+  if (isIOS) {
+    installBtn.classList.remove('hidden');
+  }
+
+  // 5) Nach erfolgreicher Installation ausblenden
+  window.addEventListener('appinstalled', () => {
+    deferredPrompt = null;
+    installBtn.classList.add('hidden');
+  });
+})();
 </script>
+
+<!-- Theme-Editor (muss nach dem Hauptskript geladen werden) -->
+<script src="js/theme-editor.js"></script>
+<script src="js/slideshow.js"></script>
 </body>
 </html>
