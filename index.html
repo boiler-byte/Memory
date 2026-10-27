@@ -11,9 +11,9 @@
 
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Memory – dynamische Themes</title>
-<!-- Bootstrap Icons (CDN) -->
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+<title>Memory 2026</title>
+<link rel="stylesheet" href="css/bootstrap-icons.min.css">
+<script src="jszip.min.js"></script>
 <style>
 
 @font-face {
@@ -1127,17 +1127,20 @@ body:not([data-ui-theme="default"]) .peek-badge {
       <input type="text" id="themeNameInput" maxlength="20" placeholder="z.B. Meine Bilder">
     </div>
     <div class="field-group">
-      <label>Bilder (1–72, webp/png/jpg)</label>
+      <label>Bilder (1–72, webp/png/jpg oder ZIP)</label>
       <div class="theme-editor-grid" id="themeEditorGrid"></div>
       <div class="theme-editor-count" id="themeEditorCount"></div>
       <div class="theme-editor-toolbar">
         <button type="button" id="addImagesBtn"><i class="bi bi-plus-lg"></i> Bilder</button>
         <button type="button" class="paste-btn" id="pasteImagesBtn"><i class="bi bi-clipboard"></i> Einfügen</button>
-        <input type="file" id="themeFilesInput" accept="image/webp,image/png,image/jpeg" multiple class="hidden">
+        <input type="file" id="themeFilesInput" accept="image/webp,image/png,image/jpeg,.zip,application/zip" multiple class="hidden">
       </div>
     </div>
     <div class="upload-errors" id="uploadErrors"></div>
     <div class="modal-actions">
+      <button id="exportThemeBtn" class="close-btn" title="Thema als ZIP exportieren" style="display:none;">
+        <i class="bi bi-download"></i> Export
+      </button>
       <button id="deleteThemeBtn" class="abort-btn" title="Thema löschen" style="display:none;">
         <i class="bi bi-trash3"></i>
       </button>
@@ -2142,6 +2145,7 @@ const closeModalBtn = document.getElementById('closeModalBtn');
 const openCreateThemeBtn = document.getElementById('openCreateThemeBtn');
 const editThemeBtn = document.getElementById('editThemeBtn');
 const deleteThemeBtnInModal = document.getElementById('deleteThemeBtn');
+const exportThemeBtn = document.getElementById('exportThemeBtn');
 const themeModalTitle = document.getElementById('themeModalTitle');
 const themeEditorGrid = document.getElementById('themeEditorGrid');
 const themeEditorCount = document.getElementById('themeEditorCount');
@@ -2186,6 +2190,7 @@ async function openEditor(mode, themeKey = null) {
     themeModalTitle.textContent = 'Neues Thema erstellen';
     themeNameInput.value = '';
     deleteThemeBtnInModal.style.display = 'none';
+    exportThemeBtn.style.display = 'none';
   } else {
     const customThemes = getCustomThemes();
     const meta = customThemes[themeKey];
@@ -2193,6 +2198,7 @@ async function openEditor(mode, themeKey = null) {
     themeModalTitle.textContent = 'Thema bearbeiten';
     themeNameInput.value = meta.label;
     deleteThemeBtnInModal.style.display = 'inline-flex';
+    exportThemeBtn.style.display = 'inline-flex';
 
     // Vorhandene Bilder laden
     let stored = [];
@@ -2270,31 +2276,134 @@ document.addEventListener('paste', async (e) => {
 
 // ---------- Validierung + Umwandlung ----------
 const VALID_TYPES = ['image/webp', 'image/png', 'image/jpeg'];
+const MAX_FILE_SIZE = 15 * 1024 * 1024; // 15 MB pro Bild
+
+function isZipFile(file) {
+  return file.type === 'application/zip'
+      || file.type === 'application/x-zip-compressed'
+      || /\.zip$/i.test(file.name);
+}
+
+function dataURLMime(dataURL) {
+  const m = /^data:([^;,]+)/.exec(dataURL || '');
+  return m ? m[1] : 'image/png';
+}
+
+function mimeToExt(mime) {
+  if (/jpe?g/i.test(mime)) return 'jpg';
+  if (/webp/i.test(mime)) return 'webp';
+  if (/png/i.test(mime))  return 'png';
+  return 'png';
+}
+
+function sanitizeFileName(name) {
+  return (name || 'theme')
+    .replace(/[<>:"/\\|?*\x00-\x1f]/g, '_')
+    .replace(/^\.+/, '')
+    .trim() || 'theme';
+}
+
+function downloadBlob(blob, filename) {
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  setTimeout(() => URL.revokeObjectURL(url), 1500);
+}
+
+// Liest Bilder (und theme.json-Metadaten) aus einer ZIP-Datei
+async function extractFromZip(file) {
+  const zip = await JSZip.loadAsync(file);
+  const images = [];
+  let metaLabel = null;
+  const tasks = [];
+
+  zip.forEach((path, entry) => {
+    if (entry.dir) return;
+    if (path.startsWith('__MACOSX/')) return;
+    const baseName = path.split('/').pop() || '';
+    if (!baseName || baseName.startsWith('._')) return;
+
+    if (baseName.toLowerCase() === 'theme.json') {
+      tasks.push(entry.async('string').then(txt => {
+        try {
+          const obj = JSON.parse(txt);
+          if (obj && typeof obj.label === 'string') metaLabel = obj.label;
+        } catch (_) {}
+      }));
+      return;
+    }
+
+    if (!/\.(webp|png|jpe?g)$/i.test(baseName)) return;
+
+    tasks.push(entry.async('blob').then(blob => {
+      const ext = baseName.split('.').pop().toLowerCase();
+      const mime = (ext === 'jpg' || ext === 'jpeg') ? 'image/jpeg' : `image/${ext}`;
+      images.push(new File([blob], baseName, { type: mime }));
+    }));
+  });
+
+  await Promise.all(tasks);
+  images.sort((a, b) => a.name.localeCompare(b.name, undefined, { numeric: true }));
+  return { images, metaLabel };
+}
 
 async function addImagesFromFiles(files) {
   uploadErrors.textContent = '';
   if (!files || files.length === 0) return;
 
+  // ZIPs entpacken
+  const expanded = [];
+  let zipMetaLabel = null;
+  for (const file of files) {
+    if (isZipFile(file)) {
+      if (file.size > 200 * 1024 * 1024) {
+        uploadErrors.textContent = `"${file.name}" ist zu groß (max. 200 MB pro ZIP).`;
+        return;
+      }
+      try {
+        const { images, metaLabel } = await extractFromZip(file);
+        if (images.length === 0) {
+          uploadErrors.textContent = `"${file.name}" enthält keine unterstützten Bilder (webp/png/jpg).`;
+          return;
+        }
+        if (metaLabel) zipMetaLabel = metaLabel;
+        expanded.push(...images);
+      } catch (err) {
+        uploadErrors.textContent = `ZIP "${file.name}" konnte nicht entpackt werden: ${err.message || err}`;
+        return;
+      }
+    } else {
+      expanded.push(file);
+    }
+  }
+
+  if (expanded.length === 0) return;
+
   // Kapazitätsprüfung
-  if (editorState.images.length + files.length > MAX_IMAGES) {
-    uploadErrors.textContent = `Maximal ${MAX_IMAGES} Bilder pro Thema.`;
+  if (editorState.images.length + expanded.length > MAX_IMAGES) {
+    uploadErrors.textContent =
+      `Maximal ${MAX_IMAGES} Bilder pro Thema (${editorState.images.length} vorhanden, ${expanded.length} neu).`;
     return;
   }
 
   // Format- und Größenvalidierung
-  for (const file of files) {
+  for (const file of expanded) {
     if (!VALID_TYPES.includes(file.type)) {
       uploadErrors.textContent = `Ungültiges Format: ${file.name}. Nur webp, png, jpg.`;
       return;
     }
-    if (file.size > 15 * 1024 * 1024) {
+    if (file.size > MAX_FILE_SIZE) {
       uploadErrors.textContent = `"${file.name}" ist zu groß (max. 15 MB).`;
       return;
     }
   }
 
   // Verarbeitung: alle nacheinander (Reihenfolge wichtig für Konsistenz)
-  for (const file of files) {
+  for (const file of expanded) {
     try {
       const dataURL = await readFileAsDataURL(file);
       const processed = await makeThumbDataURL(dataURL);
@@ -2307,6 +2416,11 @@ async function addImagesFromFiles(files) {
       uploadErrors.textContent = `Fehler beim Verarbeiten von ${file.name}: ${err.message}`;
       return;
     }
+  }
+
+  // Thema-Namen aus theme.json übernehmen, falls im Create-Modus noch leer
+  if (zipMetaLabel && editorState.mode === 'create' && !themeNameInput.value.trim()) {
+    themeNameInput.value = zipMetaLabel.slice(0, 20);
   }
 
   renderEditorGrid();
@@ -2456,6 +2570,54 @@ function readFileAsDataURL(file) {
     reader.readAsDataURL(file);
   });
 }
+
+// ==================== THEMA ALS ZIP EXPORTIEREN ====================
+async function exportThemeAsZip() {
+  uploadErrors.textContent = '';
+
+  if (editorState.images.length === 0) {
+    uploadErrors.textContent = 'Keine Bilder zum Exportieren.';
+    return;
+  }
+
+  const rawName = themeNameInput.value.trim()
+    || (getCustomThemes()[editorState.editThemeKey]?.label)
+    || 'theme';
+  const safeName = sanitizeFileName(rawName);
+
+  exportThemeBtn.disabled = true;
+  const originalHtml = exportThemeBtn.innerHTML;
+  exportThemeBtn.innerHTML = '<i class="bi bi-hourglass-split"></i> Exportiere…';
+
+  try {
+    const zip = new JSZip();
+    const folder = zip.folder(safeName);
+
+    editorState.images.forEach((img, i) => {
+      const base64 = (img.data.split(',')[1]) || '';
+      const ext = mimeToExt(dataURLMime(img.data));
+      folder.file(`${String(i + 1).padStart(2, '0')}.${ext}`, base64, { base64: true });
+    });
+
+    folder.file('theme.json', JSON.stringify({
+      label: rawName,
+      format: 'webp',
+      images: editorState.images.length,
+      exportedAt: new Date().toISOString(),
+      app: 'Memory',
+    }, null, 2));
+
+    const blob = await zip.generateAsync({ type: 'blob', compression: 'DEFLATE' });
+    downloadBlob(blob, `${safeName}.zip`);
+  } catch (err) {
+    uploadErrors.textContent = 'Fehler beim Export: ' + (err.message || err);
+  } finally {
+    exportThemeBtn.disabled = false;
+    exportThemeBtn.innerHTML = originalHtml;
+  }
+}
+
+exportThemeBtn.addEventListener('click', exportThemeAsZip);
 
 // ==================== THEMA LÖSCHEN (im Modal) ====================
 deleteThemeBtnInModal.addEventListener('click', async () => {
