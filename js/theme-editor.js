@@ -26,6 +26,7 @@
   // ---------- DOM-Referenzen ----------
   const createModal          = document.getElementById('createThemeModal');
   const themeNameInput       = document.getElementById('themeNameInput');
+  const themeVaultToggle     = document.getElementById('themeVaultToggle');
   const themeFilesInput      = document.getElementById('themeFilesInput');
   const uploadErrors         = document.getElementById('uploadErrors');
   const saveThemeBtn         = document.getElementById('saveThemeBtn');
@@ -49,6 +50,7 @@
   const editorState = {
     mode: 'create',
     editThemeKey: null,
+    inVault: false,
     images: [],
     existingImages: [],
   };
@@ -180,6 +182,7 @@
     const zip = await JSZip.loadAsync(file);
     const images = [];
     let metaLabel = null;
+    let metaVault = null;
     const tasks = [];
 
     zip.forEach((path, entry) => {
@@ -193,6 +196,7 @@
           try {
             const obj = JSON.parse(txt);
             if (obj && typeof obj.label === 'string') metaLabel = obj.label;
+            if (obj && typeof obj.vault === 'boolean') metaVault = obj.vault;
           } catch (_) {}
         }));
         return;
@@ -214,7 +218,7 @@
 
     await Promise.all(tasks);
     images.sort((a, b) => a.name.localeCompare(b.name, undefined, { numeric: true }));
-    return { images, metaLabel };
+    return { images, metaLabel, metaVault };
   }
 
   // ---------- Bilder aus Dateien hinzufügen ----------
@@ -226,6 +230,7 @@
 
     const expanded = [];
     let zipMetaLabel = null;
+    let zipMetaVault = null;
     const skipped = { format: [], size: [], zip: [], overflow: [] };
 
     // ---- Phase 1: ZIPs entpacken, fehlerhafte ZIPs überspringen ----
@@ -236,12 +241,13 @@
           continue;
         }
         try {
-          const { images, metaLabel } = await extractFromZip(file);
+          const { images, metaLabel, metaVault } = await extractFromZip(file);
           if (images.length === 0) {
             skipped.zip.push(`${file.name} (keine Bilder)`);
             continue;
           }
           if (metaLabel) zipMetaLabel = metaLabel;
+          if (metaVault !== null) zipMetaVault = metaVault;
           expanded.push(...images);
         } catch (err) {
           skipped.zip.push(`${file.name} (${err.message || err})`);
@@ -331,6 +337,10 @@
       themeNameInput.value = zipMetaLabel.slice(0, 20);
     }
 
+    if (zipMetaVault !== null && editorState.mode === 'create') {
+      editorState.inVault = zipMetaVault;
+      renderThemeVaultToggle();
+    }
     renderEditorGrid();
     reportSkips(skipped);
   }
@@ -359,11 +369,27 @@
     themeEditorCount.textContent = `${editorState.images.length} / ${MAX_IMAGES} Bilder`;
   }
 
+  // Schloss neben dem Themennamen; Standardzustand: offen.
+  function renderThemeVaultToggle() {
+    const locked = editorState.inVault;
+    themeVaultToggle.setAttribute('aria-pressed', String(locked));
+    const label = locked ? 'Thema aus dem Tresor nehmen' : 'Thema in den Tresor legen';
+    themeVaultToggle.setAttribute('aria-label', label);
+    themeVaultToggle.title = label;
+    themeVaultToggle.querySelector('i').className = locked ? 'bi bi-lock-fill' : 'bi bi-unlock';
+  }
+
+  themeVaultToggle.addEventListener('click', () => {
+    editorState.inVault = !editorState.inVault;
+    renderThemeVaultToggle();
+  });
+
   // ---------- Editor öffnen ----------
   async function openEditor(mode, themeKey = null) {
     uploadErrors.textContent = '';
     editorState.mode = mode;
     editorState.editThemeKey = themeKey;
+    editorState.inVault = false;
     editorState.images = [];
     editorState.existingImages = [];
 
@@ -376,8 +402,10 @@
       const customThemes = getCustomThemes();
       const meta = customThemes[themeKey];
       if (!meta) { alert('Thema nicht gefunden.'); return; }
+      if (window.MemoryVault?.isHidden(themeKey)) return;
       themeModalTitle.textContent = 'Thema bearbeiten';
       themeNameInput.value = meta.label;
+      editorState.inVault = meta.vault === true;
       deleteThemeBtnInModal.style.display = 'inline-flex';
       exportThemeBtn.style.display = 'inline-flex';
 
@@ -391,6 +419,7 @@
       }));
     }
 
+    renderThemeVaultToggle();
     renderEditorGrid();
     createModal.classList.remove('hidden');
   }
@@ -433,6 +462,7 @@
 
       folder.file('theme.json', JSON.stringify({
         label: rawName,
+        vault: editorState.inVault,
         format: 'webp',
         images: editorState.images.length,
         exportedAt: new Date().toISOString(),
@@ -568,15 +598,17 @@
       custom: true,
       images: imageDataArray.length,
       format: format,
+      vault: editorState.inVault,
     };
     saveCustomThemes(customThemes);
 
-    // UI aktualisieren
-    populateThemeSelect();
-    themeSelect.value = themeKey;
+    // UI aktualisieren: Ein soeben gesperrtes Thema sofort aus der Auswahl entfernen.
     setAppThemeKey(themeKey);
+    populateThemeSelect();
+    setAppThemeKey(themeSelect.value);
     validateThemeAndGame();
     updateHighscoreDisplay();
+    renderResults();
     renderThemePreview();
 
     closeEditor();

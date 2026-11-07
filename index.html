@@ -12,7 +12,7 @@
 
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Memory 2026</title>
+<title>Memory v2</title>
 <link rel="stylesheet" href="css/bootstrap-icons.min.css">
 <script src="js/jszip.min.js"></script>
 <style>
@@ -118,7 +118,7 @@ body {
   color: #9aa8b9;
   margin-bottom: 0.4rem;
 }
-select, input[type="text"], button {
+select, input[type="text"], input[type="password"], button {
   background: #1e2632;
   border: 1px solid #334155;
   color: #f0f4fa;
@@ -867,6 +867,74 @@ body[data-ui-theme="minimal"] {
   opacity: 1;
 }
 
+/* ---------- v2: Tresor ---------- */
+.vault-toggle-group {
+  flex: 0 0 auto;
+  min-width: 70px;
+}
+.vault-toggle {
+  min-width: 58px;
+  width: 58px;
+  height: 34px;
+  padding: 0;
+  border: 1px solid var(--ui-control-border);
+  border-radius: 40px;
+  background: var(--ui-control);
+  color: var(--ui-accent);
+  font-size: 1.2rem;
+}
+.vault-toggle:hover:not(:disabled), .theme-vault-toggle:hover:not(:disabled) {
+  background: var(--ui-button-hover);
+  color: #fff;
+}
+.vault-toggle[aria-pressed="true"] {
+  border-color: var(--ui-accent);
+  background: var(--ui-button);
+  color: #fff;
+}
+.theme-name-row {
+  display: flex;
+  align-items: stretch;
+  gap: 0.6rem;
+}
+.theme-name-row input { flex: 1 1 auto; min-width: 0; }
+.theme-vault-toggle {
+  flex: 0 0 48px;
+  width: 48px;
+  padding: 0;
+  border: 1px solid var(--ui-control-border);
+  border-radius: 1rem;
+  background: var(--ui-control);
+  color: var(--ui-accent);
+  font-size: 1.25rem;
+}
+.theme-vault-toggle[aria-pressed="true"] {
+  color: #fff;
+  border-color: var(--ui-accent);
+  background: var(--ui-button);
+}
+.vault-modal .modal-content { max-width: 420px; }
+.vault-modal .field-group { margin-bottom: 1rem; }
+.vault-input-row { display: flex; align-items: center; gap: 0.5rem; }
+.vault-input-row input { width: 100%; min-width: 0; }
+.vault-eye {
+  flex: 0 0 45px;
+  padding: 0;
+  min-height: 45px;
+  border: 1px solid var(--ui-control-border);
+  border-radius: 1rem;
+  background: var(--ui-control);
+  color: var(--ui-text);
+}
+.vault-help { margin: 0 0 1rem; color: var(--ui-muted); font-size: .9rem; }
+.vault-error { color: #f87171; min-height: 1.25rem; font-size: .9rem; margin-bottom: .7rem; }
+.vault-modal .modal-actions { justify-content: flex-start; }
+.vault-modal .modal-actions button { flex: 1 1 auto; }
+@media (max-width: 520px) {
+  .vault-modal .modal-content { padding: 1.4rem; }
+  .vault-modal .modal-actions button { width: 100%; }
+}
+
 /* ---------- Merkphase: Schalter ---------- */
 .field-group label.switch {
   position: relative;
@@ -1238,6 +1306,14 @@ body[data-ui-theme="minimal"] {
           <span class="slider"></span>
         </label>
       </div>
+      <!-- Tresor (standardmäßig offen, nach Passwort-Erstellung geschützt) -->
+      <div class="field-group vault-toggle-group">
+        <label for="vaultToggleBtn">Tresor</label>
+        <button type="button" id="vaultToggleBtn" class="vault-toggle"
+                aria-label="Tresor schließen" aria-pressed="false" title="Tresor schließen">
+          <i class="bi bi-unlock" aria-hidden="true"></i>
+        </button>
+      </div>
     </div>
     <!-- Bildervorschau -->
   <div class="theme-preview" id="themePreview">
@@ -1306,7 +1382,13 @@ body[data-ui-theme="minimal"] {
     <h3><i class="bi bi-images"></i> <span id="themeModalTitle">Neues Thema erstellen</span></h3>
     <div class="field-group">
       <label for="themeNameInput">Themenname (1–20 Zeichen)</label>
-      <input type="text" id="themeNameInput" maxlength="20" placeholder="z.B. Meine Bilder">
+      <div class="theme-name-row">
+        <input type="text" id="themeNameInput" maxlength="20" placeholder="z.B. Meine Bilder">
+        <button type="button" id="themeVaultToggle" class="theme-vault-toggle"
+                aria-label="Thema in den Tresor legen" aria-pressed="false" title="Thema in den Tresor legen">
+          <i class="bi bi-unlock" aria-hidden="true"></i>
+        </button>
+      </div>
     </div>
     <div class="field-group">
       <label>Bilder (1–72, webp/png/jpg oder ZIP)</label>
@@ -1345,6 +1427,62 @@ body[data-ui-theme="minimal"] {
       <div class="editor-loading-spinner"></div>
       <span id="editorLoadingText">Verarbeite…</span>
     </div>
+  </div>
+</div>
+
+<!-- Tresor: Passwort erstellen oder ändern -->
+<div id="vaultCreateModal" class="modal-overlay vault-modal hidden" role="dialog"
+     aria-modal="true" aria-labelledby="vaultCreateTitle">
+  <div class="modal-content">
+    <h3 id="vaultCreateTitle"><i class="bi bi-shield-lock"></i> Tresor-Passwort erstellen</h3>
+    <p class="vault-help">Mindestens 1 Zeichen. Mit dem Passwort lassen sich versteckte Themen wieder anzeigen.</p>
+    <form id="vaultCreateForm" novalidate>
+      <div class="field-group">
+        <label for="vaultNewPassword">Passwort</label>
+        <div class="vault-input-row">
+          <input type="password" id="vaultNewPassword" autocomplete="new-password" minlength="1" required>
+          <button type="button" class="vault-eye" data-password-target="vaultNewPassword"
+                  aria-label="Passwort anzeigen" title="Passwort anzeigen"><i class="bi bi-eye"></i></button>
+        </div>
+      </div>
+      <div class="field-group">
+        <label for="vaultRepeatPassword">Passwort wiederholen</label>
+        <div class="vault-input-row">
+          <input type="password" id="vaultRepeatPassword" autocomplete="new-password" minlength="1" required>
+          <button type="button" class="vault-eye" data-password-target="vaultRepeatPassword"
+                  aria-label="Passwort anzeigen" title="Passwort anzeigen"><i class="bi bi-eye"></i></button>
+        </div>
+      </div>
+      <div class="vault-error" id="vaultCreateError" role="alert" aria-live="polite"></div>
+      <div class="modal-actions">
+        <button type="button" class="close-btn" id="vaultCancelCreate">Abbrechen</button>
+        <button type="submit" id="vaultSavePassword">Passwort speichern</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Tresor: mit Passwort öffnen oder Passwort ändern -->
+<div id="vaultUnlockModal" class="modal-overlay vault-modal hidden" role="dialog"
+     aria-modal="true" aria-labelledby="vaultUnlockTitle">
+  <div class="modal-content">
+    <h3 id="vaultUnlockTitle"><i class="bi bi-lock-fill"></i> Tresor öffnen</h3>
+    <form id="vaultUnlockForm" novalidate>
+      <div class="field-group">
+        <label for="vaultCurrentPassword">Passwort</label>
+        <div class="vault-input-row">
+          <input type="password" id="vaultCurrentPassword" autocomplete="current-password" required>
+          <button type="button" class="vault-eye" data-password-target="vaultCurrentPassword"
+                  aria-label="Passwort anzeigen" title="Passwort anzeigen"><i class="bi bi-eye"></i></button>
+        </div>
+      </div>
+      <div class="vault-error" id="vaultUnlockError" role="alert" aria-live="polite"></div>
+      <div class="modal-actions">
+        <button type="button" class="close-btn" id="vaultCancelUnlock">Abbrechen</button>
+        <button type="button" class="close-btn" id="vaultChangePassword">Passwort ändern</button>
+        <button type="submit" id="vaultUnlockSubmit">Tresor öffnen</button>
+      </div>
+    </form>
   </div>
 </div>
 
@@ -1577,6 +1715,18 @@ function populateGameSelect() {
   gameSelect.value = state.gameKey;
 }
 
+// Tresor-Themen dürfen im geschlossenen Zustand weder auswählbar noch sichtbar sein.
+function isThemeHidden(themeKey) {
+  return !!(window.MemoryVault && window.MemoryVault.isHidden(themeKey));
+}
+
+function refreshVaultUi() {
+  populateThemeSelect();
+  renderResults();
+  updateHighscoreDisplay();
+  renderThemePreview();
+}
+
 // Themenauswahl befüllen (inkl. Custom)
 function populateThemeSelect() {
   const custom = getCustomThemes();
@@ -1590,16 +1740,19 @@ function populateThemeSelect() {
   }
   // Custom-Themes
   for (const [key, theme] of Object.entries(custom)) {
+    if (isThemeHidden(key)) continue;
     const opt = document.createElement('option');
     opt.value = key;
     opt.textContent = `${theme.label} (custom)`;
     themeSelect.appendChild(opt);
   }
   if (themeSelect.options.length > 0) {
-    if (!themeSelect.querySelector(`option[value="${state.themeKey}"]`)) {
+    if (![...themeSelect.options].some(option => option.value === state.themeKey)) {
       state.themeKey = themeSelect.options[0].value;
     }
     themeSelect.value = state.themeKey;
+  } else {
+    state.themeKey = '';
   }
   validateThemeAndGame();
 }
@@ -1630,6 +1783,11 @@ function getActiveSetCount(game) {
 function validateThemeAndGame() {
   const game = GAMES[gameSelect.value];
   const themeKey = themeSelect.value;
+  if (!game || !themeKey || isThemeHidden(themeKey)) {
+    startBtn.disabled = true;
+    themeWarning.textContent = 'Kein verfügbares Thema ausgewählt.';
+    return false;
+  }
   const custom = getCustomThemes();
   let themeImages = 0;
   if (THEMES[themeKey]) {
@@ -1655,6 +1813,7 @@ async function renderThemePreview() {
   const custom = getCustomThemes();
   themePreviewGrid.innerHTML = '';
   themePreviewCount.textContent = '';
+  if (isThemeHidden(themeKey)) return;
 
   // Info sammeln
   let totalImages = 0;
@@ -1670,6 +1829,8 @@ async function renderThemePreview() {
     totalImages = t.images;
     let stored = [];
     try { stored = await getThemeImages(themeKey); } catch (_) {}
+    // Bei einem zwischenzeitlichen Schließen des Tresors keine Bilder nachladen.
+    if (isThemeHidden(themeKey) || themeSelect.value !== themeKey) return;
     getImageSrc = (idx) => {
       const item = stored[idx];
       return item ? item.data : null;
@@ -1682,6 +1843,7 @@ async function renderThemePreview() {
   const MAX_THUMBS = 12;
   const shown = Math.min(totalImages, MAX_THUMBS);
 
+  if (isThemeHidden(themeKey) || themeSelect.value !== themeKey) return;
   for (let i = 0; i < shown; i++) {
     const src = getImageSrc(i);
     if (!src) continue;
@@ -1727,7 +1889,8 @@ function updateHighscoreDisplay() {
   const merk = merkphaseToggle.checked;
   const key = getHighscoreKey(game, theme, merk);
   const hs = getHighscores();
-  const entry = hs[key];
+  // Ein Tresor-Highscore wird bei geschlossenem Tresor nicht ausgegeben.
+  const entry = isThemeHidden(theme) ? null : hs[key];
   const label = merk ? 'Highscore (Merkphase)' : 'Highscore';
   if (entry) {
     highscoreDisplay.textContent = `${label}: ${formatTime(entry.elapsed)} (${entry.moves} Züge)`;
@@ -1738,7 +1901,7 @@ function updateHighscoreDisplay() {
 
 // Ergebnisliste rendern
   function renderResults() {
-    const results = getResults();
+    const results = getResults().filter(r => !isThemeHidden(r.theme));
     resultList.innerHTML = '';
     if (results.length === 0) {
       resultList.innerHTML = '<li>Noch keine Ergebnisse</li>';
@@ -1826,6 +1989,7 @@ async function startGame() {
 
   const gameKey = gameSelect.value;
   const themeKey = themeSelect.value;
+  if (isThemeHidden(themeKey)) return;
   const game = GAMES[gameKey];
   const [cols, rows] = getActiveGrid(game);   // [cols, rows]
   const selection = game.selection;
@@ -2258,7 +2422,7 @@ async function endGame() {
   const moves = state.moves;
 
   // Default-Name aus letztem Ergebnis
-  const results = getResults();
+  const results = getResults().filter(r => !isThemeHidden(r.theme));
   const defaultName = results.length > 0 ? results[0].name : 'Memory';
   playerNameInput.value = defaultName;
 
@@ -2611,6 +2775,7 @@ window.addEventListener('resize', () => {
 // ==================== SLIDESHOW-HELFER ====================
 // Liefert eine flache Liste aller Bild-Quellen eines Themas (Standard oder Custom)
 async function getThemeImageList(themeKey) {
+  if (isThemeHidden(themeKey)) return [];
   if (THEMES[themeKey]) {
     const t = THEMES[themeKey];
     const arr = [];
@@ -2679,6 +2844,8 @@ window.MemoryApp = {
   updateHighscoreDisplay,
   renderResults,
   renderThemePreview,
+  refreshVaultUi,
+  isThemeHidden,
   getAppState: () => state,
   setAppThemeKey: (key) => { state.themeKey = key; },
 };
@@ -2754,7 +2921,8 @@ window.MemoryApp = {
 })();
 </script>
 
-<!-- Theme-Editor (muss nach dem Hauptskript geladen werden) -->
+<!-- Tresor und Theme-Editor (nach dem Hauptskript geladen) -->
+<script src="js/vault.js"></script>
 <script src="js/theme-editor.js"></script>
 <script src="js/slideshow.js"></script>
 </body>

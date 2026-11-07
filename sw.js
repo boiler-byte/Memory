@@ -2,7 +2,7 @@
  * Cache-Version bei Updates erhöhen (z.B. 'v1.0.1'), damit alte Caches
  * automatisch gelöscht werden.
  */
-const VERSION        = 'v1.0.0';
+const VERSION        = 'v2.0.0';
 const CACHE_PREFIX   = 'memory-';
 const SHELL_CACHE    = `${CACHE_PREFIX}shell-${VERSION}`;
 const RUNTIME_CACHE  = `${CACHE_PREFIX}runtime-${VERSION}`;
@@ -18,6 +18,7 @@ const APP_SHELL = [
   './css/bootstrap-icons.min.css',
   './js/jszip.min.js',
   './js/theme-editor.js',
+  './js/vault.js',
   './js/slideshow.js',
   './fonts/NeonNight-LVZxg.otf',
   './fonts/RetroFancy-drvmX.otf',
